@@ -9,22 +9,37 @@ constexpr bool buttonPinIsActiveLow = (buttonPinType == levelType::activeLow);
 
 Buttons::Buttons()
 : CommandSource()
-//            pin             dbTime        puEnable              invert
-, buttonPause(buttonPausePin, buttonDbTime, buttonPinIsActiveLow, buttonPinIsActiveLow)
-, buttonUp   (buttonUpPin   , buttonDbTime, buttonPinIsActiveLow, buttonPinIsActiveLow)
-, buttonDown (buttonDownPin , buttonDbTime, buttonPinIsActiveLow, buttonPinIsActiveLow)
-#ifdef FIVEBUTTONS
-, buttonFour (buttonFourPin , buttonDbTime, buttonPinIsActiveLow, buttonPinIsActiveLow)
-, buttonFive (buttonFivePin , buttonDbTime, buttonPinIsActiveLow, buttonPinIsActiveLow)
-#endif
 {
-  buttonPause.begin();
-  buttonUp   .begin();
-  buttonDown .begin();
+  if constexpr (buttonPinIsActiveLow) {
+    pinMode(buttonPausePin, INPUT_PULLUP);
+    pinMode(buttonUpPin   , INPUT_PULLUP);
+    pinMode(buttonDownPin , INPUT_PULLUP);
 #ifdef FIVEBUTTONS
-  buttonFour .begin();
-  buttonFive .begin();
+    pinMode(buttonFourPin , INPUT_PULLUP);
+    pinMode(buttonFivePin , INPUT_PULLUP);
 #endif
+  }
+
+  ace_button::ButtonConfig* buttonConfig = ace_button::ButtonConfig::getSystemButtonConfig();
+  buttonConfig->setIEventHandler(this);
+  buttonConfig->setFeature(ace_button::ButtonConfig::kFeatureLongPress);
+  buttonConfig->setFeature(ace_button::ButtonConfig::kFeatureSuppressAfterLongPress);
+}
+
+void Buttons::handleEvent(ace_button::AceButton* button, uint8_t eventType, uint8_t /*buttonState*/) {
+  const buttonState bs = (eventType == ace_button::AceButton::kEventReleased   ) ? buttonState::released    :
+                         (eventType == ace_button::AceButton::kEventLongPressed) ? buttonState::pressedLong :
+                                                                                   buttonState::none        ;
+  switch (button->getPin()) {
+  case buttonPausePin: stateButtonPause = bs; break;
+  case buttonUpPin   : stateButtonUp    = bs; break;
+  case buttonDownPin : stateButtonDown  = bs; break;
+#ifdef FIVEBUTTONS
+  case buttonFourPin : stateButtonFour  = bs; break;
+  case buttonFivePin : stateButtonFive  = bs; break;
+#endif
+  }
+
 }
 
 commandRaw Buttons::getCommandRaw() {
@@ -32,67 +47,66 @@ commandRaw Buttons::getCommandRaw() {
   readButtons();
 
   if (ignoreAll) {
-    if (isNoButton())
+    if (isNoButton()) {
       ignoreAll = false;
+      stateButtonPause = buttonState::none;
+      stateButtonUp    = buttonState::none;
+      stateButtonDown  = buttonState::none;
+    }
     return commandRaw::none;
   }
 
-  if ((  buttonPause.pressedFor(buttonLongPress)
-      || buttonUp   .pressedFor(buttonLongPress)
-      || buttonDown .pressedFor(buttonLongPress)
-      )
-     && buttonPause.isPressed()
-     && buttonUp   .isPressed()
-     && buttonDown .isPressed()) {
+  if ((  stateButtonPause == buttonState::pressedLong
+      || stateButtonUp    == buttonState::pressedLong
+      || stateButtonDown  == buttonState::pressedLong)
+      && isReset()
+     ) {
     ret = commandRaw::allLong;
     ignoreAll = true;
+    stateButtonPause = buttonState::none;
+    stateButtonUp    = buttonState::none;
+    stateButtonDown  = buttonState::none;
   }
 
-  else if (buttonPause.wasReleased()) {
-    if (not ignorePauseButton)
-      ret = commandRaw::pause;
-    else
-      ignorePauseButton = false;
+  else if (stateButtonPause == buttonState::released) {
+    ret = commandRaw::pause;
+    stateButtonPause = buttonState::none;
   }
 
-  else if (buttonPause.pressedFor(buttonLongPress) && not ignorePauseButton) {
+  else if (stateButtonPause == buttonState::pressedLong) {
     ret = commandRaw::pauseLong;
-    ignorePauseButton = true;
+    stateButtonPause = buttonState::none;
   }
 
-  else if (buttonUp.wasReleased()) {
-    if (!ignoreUpButton) {
-      ret = commandRaw::up;
-    }
-    else
-      ignoreUpButton = false;
+  else if (stateButtonUp == buttonState::released) {
+    ret = commandRaw::up;
+    stateButtonUp = buttonState::none;
   }
 
-  else if (buttonUp.pressedFor(buttonLongPress) && not ignoreUpButton) {
+  else if (stateButtonUp == buttonState::pressedLong) {
     ret = commandRaw::upLong;
-    ignoreUpButton = true;
+    stateButtonUp = buttonState::none;
   }
 
-  else if (buttonDown.wasReleased()) {
-    if (!ignoreDownButton) {
-      ret = commandRaw::down;
-    }
-    else
-      ignoreDownButton = false;
+  else if (stateButtonDown == buttonState::released) {
+    ret = commandRaw::down;
+    stateButtonDown = buttonState::none;
   }
 
-  else if (buttonDown.pressedFor(buttonLongPress) && not ignoreDownButton) {
+  else if (stateButtonDown == buttonState::pressedLong) {
     ret = commandRaw::downLong;
-    ignoreDownButton = true;
+    stateButtonDown = buttonState::none;
   }
 
 #ifdef FIVEBUTTONS
-  else if (buttonFour.wasReleased()) {
+  else if (stateButtonFour == buttonState::released) {
     ret = commandRaw::four;
+    stateButtonFour = buttonState::none;
   }
 
-  else if (buttonFive.wasReleased()) {
+  else if (stateButtonFive == buttonState::released) {
     ret = commandRaw::five;
+    stateButtonFive = buttonState::none;
   }
 #endif
 
@@ -103,24 +117,23 @@ commandRaw Buttons::getCommandRaw() {
 }
 
 bool Buttons::isNoButton() {
-  return not buttonPause.isPressed()
-      && not buttonUp   .isPressed()
-      && not buttonDown .isPressed();
+  return not buttonPause.isPressedRaw()
+      && not buttonUp   .isPressedRaw()
+      && not buttonDown .isPressedRaw();
 }
 
 bool Buttons::isReset() {
-  constexpr int buttonActiveLevel = getLevel(buttonPinType, level::active);
-  return (digitalRead(buttonPausePin) == buttonActiveLevel &&
-          digitalRead(buttonUpPin   ) == buttonActiveLevel &&
-          digitalRead(buttonDownPin ) == buttonActiveLevel );
+  return buttonPause.isPressedRaw()
+      && buttonUp   .isPressedRaw()
+      && buttonDown .isPressedRaw();
 }
 
 void Buttons::readButtons() {
-  buttonPause.read();
-  buttonUp   .read();
-  buttonDown .read();
+  buttonPause.check();
+  buttonUp   .check();
+  buttonDown .check();
 #ifdef FIVEBUTTONS
-  buttonFour .read();
-  buttonFive .read();
+  buttonFour .check();
+  buttonFive .check();
 #endif
 }
