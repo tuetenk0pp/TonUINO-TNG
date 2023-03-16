@@ -136,11 +136,11 @@ enum class advertTracks: uint16_t {
 //
 class Mp3Notify {
 public:
-  static void OnError             (DfMp3&, uint16_t errorCode);
-  static void OnPlayFinished      (DfMp3&, DfMp3_PlaySources source, uint16_t track);
-  static void OnPlaySourceOnline  (DfMp3&, DfMp3_PlaySources source);
-  static void OnPlaySourceInserted(DfMp3&, DfMp3_PlaySources source);
-  static void OnPlaySourceRemoved (DfMp3&, DfMp3_PlaySources source);
+  static void OnError             (/*DfMp3&, */uint16_t errorCode);
+  static void OnPlayFinished      (/*DfMp3&, */DfMp3_PlaySources source, uint16_t track);
+  static void OnPlaySourceOnline  (/*DfMp3&, */DfMp3_PlaySources source);
+  static void OnPlaySourceInserted(/*DfMp3&, */DfMp3_PlaySources source);
+  static void OnPlaySourceRemoved (/*DfMp3&, */DfMp3_PlaySources source);
 
   static void ResetLastTrackFinished() { lastTrackFinished = 0; }
 private:
