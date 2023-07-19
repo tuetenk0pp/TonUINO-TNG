@@ -8,14 +8,14 @@
  */
 //#define TonUINO_Classic
 //#define ALLinONE
-//#define ALLinONE_Plus
+#define ALLinONE_Plus
 
 /* uncomment one of the below lines to enable special button support
  * um die Tasten zu konfigurieren, bitte eine der nächsten Zeilen auskommentieren
  * default: THREEBUTTONS for classic
  *          FIVEBUTTONS  for AiO and AiO+
  */
-//#define THREEBUTTONS
+#define THREEBUTTONS
 //#define FIVEBUTTONS
 //#define BUTTONS3X3
 
