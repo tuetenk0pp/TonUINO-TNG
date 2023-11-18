@@ -34,12 +34,12 @@ void u8toa_hex(uint8_t number, char *arr) {
     number /= 16;
   } while (number != 0);
 }
-const char* dump_byte_array(byte * buffer, size_t bufferSize) {
+const char* dump_byte_array(byte * buffer, uint8_t bufferSize) {
   static char ret[3*10+1];
   ret[0] = '\0';
   if (bufferSize > 10)
     return ret;
-  size_t pos = 0;
+  uint8_t pos = 0;
   for (uint8_t i = 0; i < bufferSize; ++i) {
     ret[pos++] = ' ';
     u8toa_hex(buffer[i], &ret[pos]);
@@ -161,7 +161,7 @@ Chip_card::readCardEvent Chip_card::readCard(nfcTagObject &nfcTag) {
       return readCardEvent::none;
   }
   const uint32_t version              = buffer[4];
-  if (version == cardVersion) {
+  if ((version != 0) && (version <= cardVersion)) {
     nfcTag.nfcFolderSettings.folder   = buffer[5];
     nfcTag.nfcFolderSettings.mode     = static_cast<pmode_t>(buffer[6]);
     nfcTag.nfcFolderSettings.special  = buffer[7];
@@ -239,7 +239,15 @@ void Chip_card::sleepCard() {
 void Chip_card::initCard() {
   SPI.begin();                                                    // Init SPI bus
   mfrc522.PCD_Init();                                             // Init MFRC522
-  LOG_CODE(card_log, s_debug, mfrc522.PCD_DumpVersionToSerial()); // Show details of PCD - MFRC522 Card Reader
+  LOG(card_log, s_info, F("MFRC522:"), mfrc522.PCD_ReadRegister(MFRC522::VersionReg));
+  // Show MFRC522 Card Reader version
+  // 0 or 255: communication  error)
+  //      136: (clone)
+  //      144: v0.0
+  //      145: v1.0
+  //      146: v2.0
+  //       18: counterfeit chip
+  //     else: unknown
 }
 
 void Chip_card::stopCard() {

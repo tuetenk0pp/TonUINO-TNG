@@ -7,12 +7,13 @@
  * Bitte die passende Platine durch entfernen der Kommentare in einer der folgenden Zeilen auswählen
  */
 //#define TonUINO_Classic
+//#define TonUINO_Every
 //#define ALLinONE
 #define ALLinONE_Plus
 
 /* uncomment one of the below lines to enable special button support
  * um die Tasten zu konfigurieren, bitte eine der nächsten Zeilen auskommentieren
- * default: THREEBUTTONS for classic
+ * default: THREEBUTTONS for classic/every
  *          FIVEBUTTONS  for AiO and AiO+
  */
 #define THREEBUTTONS
@@ -33,6 +34,8 @@
  */
 //#define DFMiniMp3_T_CHIP_GD3200B
 //#define DFMiniMp3_T_CHIP_MH2024K16SS
+//#define DFMiniMp3_T_CHIP_LISP3
+#define DFMiniMp3_T_CHIP_Mp3ChipIncongruousNoAck
 
 /* uncomment the below line to disable shutdown via button (long press play/pause)
  * um ein Shutdown via Taste (long press Play/Pause) zu unterdrücken bitte in der nächste Zeile den Kommentar entfernen
@@ -45,6 +48,27 @@
 //#define ROTARY_ENCODER
 inline constexpr uint8_t   rotaryEncoderClkPin    = 31;
 inline constexpr uint8_t   rotaryEncoderDtPin     = 32;
+
+/* uncomment the below line to enable the poti for volume setting
+ * um den Poti zu unterstützen bitte in der nächste Zeile den Kommentar entfernen
+ */
+//#define POTI
+//inline constexpr uint8_t   potiPin    = A14; // AiO+ PF4
+
+/* uncomment the below line to enable the neo ring
+ * um den Neo Ring zu unterstützen bitte in der nächste Zeile den Kommentar entfernen
+ */
+//#define NEO_RING
+inline constexpr uint8_t neoPixelRingPin = 10; // PB2 on AiOplus
+inline constexpr uint8_t neoPixelNumber  = 24; // Total Number of Pixels
+
+/* uncomment the below line to enable the Speaker on/off on Pin D6 for Classic to suppress noise
+ * on startup and shutdown
+ * um den Lautsprecher ein/aus Schalter über D6 für die Classic Variante zu unterstützen bitte
+ * in der nächste Zeile den Kommentar entfernen (zur Unterdrückung der Ein- und Ausschaltgeräusche)
+ */
+//#define SPKONOFF
+
 
 /* #################################################################################################
  * ##### normally, you don't have to edit lines below                   ############################
@@ -82,7 +106,7 @@ inline constexpr uint32_t  buttonLongPressRepeat =  200; // timeout for long pre
  ** Classic ****************************************************************
  ***************************************************************************/
 
-#ifdef TonUINO_Classic
+#if defined(TonUINO_Classic) or defined(TonUINO_Every)
 // ####### buttons #####################################
 
 inline constexpr uint8_t   buttonPausePin  = A0;
@@ -127,11 +151,13 @@ inline constexpr unsigned long dfPlayer_timeUntilStarts = 1000;
 
 // ####### tonuino #####################################
 
-inline constexpr uint8_t       shutdownPin     = 7;
-inline constexpr levelType     shutdownPinType = levelType::activeHigh;
-inline constexpr uint8_t       openAnalogPin   = A7;
-inline constexpr unsigned long cycleTime       = 50;
-#endif /* TonUINO_Classic */
+inline constexpr uint8_t       shutdownPin      = 7;
+inline constexpr levelType     shutdownPinType  = levelType::activeHigh;
+inline constexpr uint8_t       ampEnablePin     = 6;
+inline constexpr levelType     ampEnablePinType = levelType::activeHigh;
+inline constexpr uint8_t       openAnalogPin    = A7;
+inline constexpr unsigned long cycleTime        = 50;
+#endif /* TonUINO_Classic or TonUINO_Every */
 
 /***************************************************************************
  ** AiO plus ***************************************************************

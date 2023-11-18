@@ -12,6 +12,11 @@ namespace {
 //  138-155       reserved (18 Byte)
 //  156-255       extra Shortcuts (100 Byte, max. 25 Shortcuts)
 
+// Nano:      2048 byte
+// Nano Every: 256 byte
+// AiO:        512 byte (with framework-lgt8fx@1.0.6 emulated)
+// AiOplus:    256 byte
+
 constexpr uint16_t startAddressFolderSettings =   0;
 constexpr uint16_t startAddressAdminSettings  = 100;
 constexpr uint16_t startAddressExtraShortcuts = 156;
@@ -48,9 +53,9 @@ void Settings::resetSettings() {
   minVolume            =  5;
   initVolume           = 15;
   eq                   =  1;
-  locked               = false;
+  dummy                =  0;
   standbyTimer         =  0;
-  invertVolumeButtons  = true;
+  invertVolumeButtons  =  1;
   shortCuts[0]         =  { 0, pmode_t::none, 0, 0 };
   shortCuts[1]         =  { 0, pmode_t::none, 0, 0 };
   shortCuts[2]         =  { 0, pmode_t::none, 0, 0 };
@@ -60,39 +65,35 @@ void Settings::resetSettings() {
   adminMenuPin[1]      =  1;
   adminMenuPin[2]      =  1;
   adminMenuPin[3]      =  1;
-  pauseWhenCardRemoved = false;
+  pauseWhenCardRemoved =  0;
 
   writeSettingsToFlash();
 }
 
-void Settings::migrateSettings(int oldVersion) {
-  if (oldVersion == 1) {
-    LOG(settings_log, s_info, F("1->2"));
-    version              = 2;
-    adminMenuLocked      = 0;
-    adminMenuPin[0]      = 1;
-    adminMenuPin[1]      = 1;
-    adminMenuPin[2]      = 1;
-    adminMenuPin[3]      = 1;
-    pauseWhenCardRemoved = false;
-    writeSettingsToFlash();
-  }
-  const unsigned int t = pauseWhenCardRemoved;
-  if (t == 0xff)
-    pauseWhenCardRemoved = false;
-}
+//void Settings::migrateSettings(int oldVersion) {
+//  if (oldVersion == 1) {
+//    LOG(settings_log, s_info, F("1->2"));
+//    version              = 2;
+//    adminMenuLocked      = 0;
+//    adminMenuPin[0]      = 1;
+//    adminMenuPin[1]      = 1;
+//    adminMenuPin[2]      = 1;
+//    adminMenuPin[3]      = 1;
+//    pauseWhenCardRemoved = 0;
+//    writeSettingsToFlash();
+//  }
+//}
 
 void Settings::loadSettingsFromFlash() {
   LOG(settings_log, s_debug, F("loadSettings"));
   EEPROM_get(startAddressAdminSettings, *this);
   if (cookie != cardCookie)
     resetSettings();
-  migrateSettings(version);
+  //migrateSettings(version);
 
   LOG(settings_log, s_info, F("Ver:"), version);
   LOG(settings_log, s_info, F("Vol:"), maxVolume, F(" "), minVolume, F(" "), initVolume);
   LOG(settings_log, s_info, F("EQ:" ), eq);
-  LOG(settings_log, s_info, F("LOC:"), locked);
   LOG(settings_log, s_info, F("ST:" ), standbyTimer);
   LOG(settings_log, s_info, F("IB:" ), invertVolumeButtons);
   LOG(settings_log, s_info, F("AL:" ), adminMenuLocked);

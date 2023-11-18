@@ -1,11 +1,17 @@
 # TonUINO
 Die DIY Musikbox (nicht nur) für Kinder
 
+Dies ist die offizielle Software für die Musikbox, die [hier](https://www.tonuino.de/TNG) beschrieben ist. 
+
+Falls du Interesse daran hast, zur Weiterentwicklung des TonUINO-Projekts beizutragen, bist du herzlich eingeladen, dich zu beteiligen. Für Diskussionen verwende bitte das [Forum](https://discourse.voss.earth). Dort findest du auch weitere Anleitungen und bekommst Hilfe bei Problemen. 
+
 # Anleitung zum Compilieren
 
 Allgemeine Anleitungen zum Einrichten der IDE findet man hier [www.tonuino.de/TNG](https://www.tonuino.de/TNG) und hier [www.leiterkartenpiraten.de](https://www.leiterkartenpiraten.de)
 
 ## Arduino IDE
+- Es ist unbedingt darauf zu achten, das das Verzeichnis in das das Repository gecloned oder heruntergeladen wird (also das Verzeichnis, in dem schließlich auch die TonUINO-TNG.ino zu finden ist, genau so heißt, wie die ino Datei, also in diesem Fall "TonUINO-TNG"!
+
 - Bei der classic und AiO HW Variante muss die Datei 'platform.local.txt' in den avr HW Ordner kopiert werden. Dieser Ordner ist gewöhnlich folgender:  
 
 ```
@@ -18,21 +24,26 @@ Allgemeine Anleitungen zum Einrichten der IDE findet man hier [www.tonuino.de/TN
       Aio:      ~/.arduino15/packages/LGT8fx Boards/hardware/avr/1.0.7
 
     MacOS 13.x:  
-      Classic:  ~/Library/Arduino15/packages/arduino/hardware/avr
-      AiO:      ~/Library/Arduino15/packages/LGT8fx Boards/hardware/avr
+      Classic:  ~/Library/Arduino15/packages/arduino/hardware/avr/1.8.6
+      AiO:      ~/Library/Arduino15/packages/LGT8fx Boards/hardware/avr/1.0.7
 ```
 
 - Man findet den Ordner auch, wenn man die Datei platform.txt sucht.  
 
 - Für die AiOplus HW Variante sind keine Änderungen notwendig  
 
-- Es müssen folgende Versionen der Libraries verwendet werden:  
-    - jchristensen/JC_Button: 2.1.2  
-    - miguelbalboa/MFRC522: 1.4.10  
-    - makuna/DFPlayer Mini Mp3 by Makuna: 1.1.0 (**Achtung: nicht 1.2.0!**)
+- Die HW Variante (TonUINO_Classic, ALLinONE oder ALLinONE_Plus) sowie die Button Konfiguration (THREEBUTTONS, FIVEBUTTONS oder BUTTONS3X3) muss in der Datei constants.hpp durch Entfernen des entsprechenden Kommentars angegeben werden. 
 
 ## platform.io
 - geht out-of-the-box
+
+## Libraries
+- Es müssen folgende Versionen der Libraries verwendet werden:  
+    - jchristensen/JC_Button: 2.1.2  
+    - miguelbalboa/MFRC522: 1.4.10  
+    - makuna/DFPlayer Mini Mp3 by Makuna: 1.2.2
+    - adafruit/Adafruit NeoPixel: 1.11.0 (optional, nur bei Feature NEO_RING notwendig)
+
 
 # Installation
 
@@ -40,10 +51,29 @@ Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.1.2 geän
 
 # Change Log
 
-## Version 3.1.3 (16.07.2023)
-- [Issue 095](https://github.com/tonuino/TonUINO-TNG/issues/95): React on 3x3 Button Board also in Play State
+## Version 3.1.4 (16.11.2023)
+- [Issue 133](https://github.com/tonuino/TonUINO-TNG/issues/133): Cards with version 1 don't work
 
-## Version 3.1.3 (07.06.2023)
+
+## Version 3.1.4 (29.10.2023)
+- [Issue 125](https://github.com/tonuino/TonUINO-TNG/issues/125): platform.local.txt on MacOS
+- [Issue 126](https://github.com/tonuino/TonUINO-TNG/issues/126): Support Speaker on/off for Classic Variant to suppress Noise on startup and shutdown 
+- [Issue 123](https://github.com/tonuino/TonUINO-TNG/issues/123): Setting of pauseWhenCardRemoved not disabled when upgraded from Version 2.x 
+- [Issue 117](https://github.com/tonuino/TonUINO-TNG/issues/117): Support potentiometer for setting the 
+- [Issue 120](https://github.com/tonuino/TonUINO-TNG/issues/120): Change to version 1.2.2 of the DFMiniMp3 library
+- [Issue 118](https://github.com/tonuino/TonUINO-TNG/issues/118): In modus pause_if_card_removed no shortcut is played
+- [Issue 115](https://github.com/tonuino/TonUINO-TNG/issues/115): Sometimes initial SetVolume does not come to an end
+- [Issue 103](https://github.com/tonuino/TonUINO-TNG/issues/103): Deploy pages for online upload
+- [Issue 111](https://github.com/tonuino/TonUINO-TNG/issues/111): TonUINO crashes if if the player gives a track count >255
+- [Issue 108](https://github.com/tonuino/TonUINO-TNG/issues/108): Missing OnPlayFinished: the progress is not saved for Hoerbuch mode
+- [Issue 106](https://github.com/tonuino/TonUINO-TNG/issues/106): Support LISP3 DF Player
+- [Issue 100](https://github.com/tonuino/TonUINO-TNG/issues/100): Support Nano Every with classic HW
+- [Issue 104](https://github.com/tonuino/TonUINO-TNG/issues/104): Use bad framework-lgt8fx
+- [Issue 099](https://github.com/tonuino/TonUINO-TNG/issues/99): Use new DFPlayer Mini Mp3 v1.2.1 Library
+
+## Version 3.1.3 (03.08.2023)
+- [Issue 073](https://github.com/tonuino/TonUINO-TNG/issues/73): Support LED or NeoPixel Ring
+- [Issue 095](https://github.com/tonuino/TonUINO-TNG/issues/95): React on 3x3 Button Board also in Play State
 - [Issue 088](https://github.com/tonuino/TonUINO-TNG/issues/88): Flash reset during startup should not open the admin menu
 - [Issue 039](https://github.com/tonuino/TonUINO-TNG/issues/39): No pause if card is removed too early
 - [Issue 091](https://github.com/tonuino/TonUINO-TNG/issues/91): Revise configuration part of the file constants.hpp

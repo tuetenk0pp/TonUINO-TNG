@@ -92,11 +92,19 @@ class Mp3ChipOriginal
 {
 };
 
+class Mp3ChipIncongruousNoAck
+{
+};
+
 template <class T_SERIAL_METHOD, class T_NOTIFICATION_METHOD, class T_CHIP_VARIANT = Mp3ChipOriginal>
 class DFMiniMp3
 {
 public:
     explicit DFMiniMp3(T_SERIAL_METHOD& serial)
+    {
+    }
+
+    void reset()
     {
     }
 
@@ -191,6 +199,11 @@ public:
     void setVolume(uint8_t volume)
     {
       current_volume = volume;
+    }
+
+    uint8_t getVolume()
+    {
+      return current_volume;
     }
 
     DfMp3_Eq current_eq = DfMp3_Eq_Normal;

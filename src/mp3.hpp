@@ -2,6 +2,7 @@
 #define SRC_MP3_HPP_
 
 #include <Arduino.h>
+//#define DfMiniMp3Debug Serial
 #include <DFMiniMp3.h>
 
 #include "constants.hpp"
@@ -22,6 +23,9 @@ class Mp3Notify;
 
 #ifdef DFMiniMp3_T_CHIP_MH2024K16SS
 #define DFMiniMp3_T_CHIP_VARIANT Mp3ChipMH2024K16SS
+#endif
+#ifdef DFMiniMp3_T_CHIP_Mp3ChipIncongruousNoAck
+#define DFMiniMp3_T_CHIP_VARIANT Mp3ChipIncongruousNoAck
 #endif
 
 // define a handy type using serial and our notify class
@@ -167,6 +171,9 @@ public:
   void clearAllQueue() { clearFolderQueue(); clearMp3Queue(); }
   bool isPlayingFolder() { return playing == play_folder; }
   bool isPlayingMp3   () { return playing == play_mp3   ; }
+#ifdef DFMiniMp3_T_CHIP_LISP3
+  bool resetPlayingAdv() { bool ret = advPlaying; advPlaying = false; return ret; }
+#endif
   // firstTrack and lastTrack -> index in folder starting with 1
   // currentTrack             -> index in queue starting with 0
   void enqueueTrack(uint8_t folder, uint8_t firstTrack, uint8_t lastTrack, uint8_t currentTrack = 0);
@@ -190,10 +197,14 @@ public:
   void increaseVolume();
   void decreaseVolume();
   void setVolume     ();
+  void setVolume     (uint8_t);
+  uint8_t getVolume  () const { return volume; }
   void loop          ();
 
 private:
   friend class tonuino_fixture;
+
+  void logVolume();
 
   typedef queue<uint8_t, maxTracksInFolder> track_queue;
 
@@ -207,7 +218,7 @@ private:
   // folder queue
   track_queue          q{};
   uint8_t              current_folder{};
-  size_t               current_track{};
+  uint16_t             current_track{};
   bool                 endless{false};
 
   // mp3 queue
@@ -225,6 +236,10 @@ private:
   Timer                missingOnPlayFinishedTimer{};
   bool                 isPause{};
 #endif
+#ifdef DFMiniMp3_T_CHIP_LISP3
+  bool                 advPlaying{false};
+#endif
+
 };
 
 #endif /* SRC_MP3_HPP_ */

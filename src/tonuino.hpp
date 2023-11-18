@@ -6,10 +6,14 @@
 #include "buttons.hpp"
 #include "buttons3x3.hpp"
 #include "rotary_encoder.hpp"
+#include "poti.hpp"
 #include "serial_input.hpp"
 #include "mp3.hpp"
 #include "modifier.hpp"
 #include "timer.hpp"
+#ifdef NEO_RING
+#include "ring.hpp"
+#endif
 
 class Tonuino {
 public:
@@ -35,11 +39,15 @@ public:
   const nfcTagObject& getCard() const           { return myCard; }
   void setFolder(folderSettings *newFolder    ) { myFolder = newFolder; }
   uint8_t getFolder()                           { return myFolder->folder; }
+  bool playingCard()                            { return myFolder == &myCard.nfcFolderSettings; }
 
   Mp3&      getMp3      () { return mp3      ; }
   Commands& getCommands () { return commands ; }
   Settings& getSettings () { return settings ; }
   Chip_card& getChipCard() { return chip_card; }
+#ifdef NEO_RING
+  Ring&     getRing     () { return ring     ; }
+#endif
   static uint32_t generateRamdomSeed();
 
 #ifdef SerialInputAsCommand
@@ -66,6 +74,9 @@ private:
 #ifdef ROTARY_ENCODER
   RotaryEncoder        rotaryEncoder       {settings};
 #endif
+#ifdef POTI
+  Poti                 poti                {settings, mp3};
+#endif
   Commands             commands            {
                                             settings
                                           , &buttons
@@ -78,8 +89,14 @@ private:
 #ifdef ROTARY_ENCODER
                                           , &rotaryEncoder
 #endif
+#ifdef POTI
+                                          , &poti
+#endif
                                            };
   Chip_card            chip_card           {mp3};
+#ifdef NEO_RING
+  Ring                 ring                {};
+#endif
 
   friend class Base;
 

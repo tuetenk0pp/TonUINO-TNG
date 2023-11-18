@@ -5,7 +5,7 @@
 
 namespace {
 
-const __FlashStringHelper* str_Volume() { return F("Volume: ") ; }
+const __FlashStringHelper* str_Space()  { return F(" ") ; }
 
 }
 
@@ -30,6 +30,10 @@ void Mp3Notify::OnPlayFinished(DfMp3&, DfMp3_PlaySources /*source*/, uint16_t tr
     return;
   else
     lastTrackFinished = track;
+#ifdef DFMiniMp3_T_CHIP_LISP3  
+  if (Tonuino::getTonuino().getMp3().resetPlayingAdv())
+    return;
+#endif
   delay(1);
   Tonuino::getTonuino().nextTrack(1/*tracks*/, true/*fromOnPlayFinished*/);
 }
@@ -78,12 +82,17 @@ void Mp3::waitForTrackToStart() {
 
 void Mp3::playAdvertisement(uint16_t track, bool olnyIfIsPlaying) {
   LOG(mp3_log, s_info, F("play adv: "), track);
+#ifdef DFMiniMp3_T_CHIP_LISP3
+  advPlaying = true;
+#endif
   if (isPlaying()) {
+    LOG(mp3_log, s_debug, F("playAdvertisement: "), track);
     Base::playAdvertisement(track);
   }
   else if (not olnyIfIsPlaying) {
     start();
     loop();
+    LOG(mp3_log, s_debug, F("playAdvertisement: "), track);
     Base::playAdvertisement(track);
     waitForTrackToFinish(); // TODO remove waitForTrackToFinish
     pause();
@@ -111,10 +120,14 @@ void Mp3::enqueueTrack(uint8_t folder, uint8_t firstTrack, uint8_t lastTrack, ui
   clearAllQueue();
   current_folder = folder;
   endless = false;
+  LOG(mp3_log, s_info, F("enqueue "), folder, F("-"), lf_no);
   for (uint8_t i = firstTrack; i<=lastTrack; ++i) {
-    LOG(mp3_log, s_info, F("enqueue "), folder, F("-"), i);
+    LOG(mp3_log, s_info, i, str_Space(), lf_no);
     q.push(i);
+    if (i == 0xffu)
+      break;
   }
+  LOG(mp3_log, s_info, str_Space());
   current_track = currentTrack;
 }
 void Mp3::enqueueTrack(uint8_t folder, uint8_t track) {
@@ -122,11 +135,13 @@ void Mp3::enqueueTrack(uint8_t folder, uint8_t track) {
 }
 void Mp3::shuffleQueue() {
   q.shuffle();
+  LOG(mp3_log, s_info, F("shuffled "), lf_no);
   for (uint8_t i = 0; i<q.size(); ++i)
-    LOG(mp3_log, s_info, F("shuffled "), q.get(i));
+    LOG(mp3_log, s_info, q.get(i), str_Space(), lf_no);
+  LOG(mp3_log, s_info, str_Space());
 }
 void Mp3::enqueueMp3FolderTrack(uint16_t track, bool playAfter) {
-  LOG(mp3_log, s_info, F("enqueue mp3 "), track, F(" "), playAfter);
+  LOG(mp3_log, s_info, F("enqueue mp3 "), track, str_Space(), playAfter);
   clearFolderQueue();
   if (not playAfter)
     clearMp3Queue();
@@ -145,6 +160,7 @@ void Mp3::playCurrent() {
     if (mp3_track != 0) {
       LOG(mp3_log, s_info, F("play mp3 "), mp3_track);
       Mp3Notify::ResetLastTrackFinished(); // maybe the same mp3 track is played twice
+      LOG(mp3_log, s_debug, F("playMp3FolderTrack: "), mp3_track);
       Base::playMp3FolderTrack(mp3_track);
 #ifdef CHECK_MISSING_ONPLAYFINISHED
       isPause = false;
@@ -212,7 +228,9 @@ uint16_t Mp3::getFolderTrackCount(uint16_t folder)
     delay(500);
 #endif
 
+    LOG(mp3_log, s_debug, F("getFolderTrackCount: "), folder);
     ret = Base::getFolderTrackCount(folder);
+    LOG(mp3_log, s_debug, F("getFolderTrackCount return: "), ret);
 
 #ifdef DFMiniMp3_T_CHIP_GD3200B
     Base::setVolume(volume);
@@ -223,22 +241,42 @@ uint16_t Mp3::getFolderTrackCount(uint16_t folder)
 
 void Mp3::increaseVolume() {
   if (volume < settings.maxVolume) {
+    LOG(mp3_log, s_debug, F("setVolume: "), volume+1);
     Base::setVolume(++volume);
   }
-  LOG(mp3_log, s_info, str_Volume(), volume);
+  logVolume();
 }
 
 void Mp3::decreaseVolume() {
   if (volume > settings.minVolume) {
+    LOG(mp3_log, s_debug, F("setVolume: "), volume-1);
     Base::setVolume(--volume);
   }
-  LOG(mp3_log, s_info, str_Volume(), volume);
+  logVolume();
 }
 
 void Mp3::setVolume() {
   volume = settings.initVolume;
+  LOG(mp3_log, s_debug, F("setVolume: "), volume);
+  uint8_t max_loop = 20; // 4 seconds
+  while((--max_loop>0) && (Base::getVolume() != volume)) {
+    delay(100);
+    Base::setVolume(volume);
+    delay(100);
+  }
+  LOG(mp3_log, s_debug, F("setVolume loops: "), 20-max_loop);
+  logVolume();
+}
+
+void Mp3::setVolume(uint8_t v) {
+  volume = v;
+  LOG(mp3_log, s_debug, F("setVolume: "), volume);
   Base::setVolume(volume);
-  LOG(mp3_log, s_info, str_Volume(), volume);
+  logVolume();
+}
+
+void Mp3::logVolume() {
+  LOG(mp3_log, s_info, F("Volume: "), volume);
 }
 
 void Mp3::loop() {
@@ -252,7 +290,7 @@ void Mp3::loop() {
   }
   if (missingOnPlayFinishedTimer.isActive() && missingOnPlayFinishedTimer.isExpired()) {
     LOG(mp3_log, s_info, F("missing OnPlayFinished"));
-    playNext();
+    Tonuino::getTonuino().nextTrack(1/*tracks*/, true/*fromOnPlayFinished*/);
   }
   else
 #endif
