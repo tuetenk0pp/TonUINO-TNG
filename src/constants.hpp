@@ -45,7 +45,7 @@
 /* uncomment the below line to enable the rotary encoder for volume setting (only for AiOplus)
  * um den Drehgeber zu unterstützen bitte in der nächste Zeile den Kommentar entfernen (nur für AioPlus)
  */
-//#define ROTARY_ENCODER
+#define ROTARY_ENCODER
 inline constexpr uint8_t   rotaryEncoderClkPin    = 31;
 inline constexpr uint8_t   rotaryEncoderDtPin     = 32;
 
@@ -73,14 +73,14 @@ inline constexpr uint8_t neoPixelNumber  = 24; // Total Number of Pixels
  * um die selbe RFID zu ignorieren, wenn die bereits spielt, in der nächste
  * Zeile den Kommentar entfernen
  */
-//#define DONT_ACCEPT_SAME_RFID_TWICE
+#define DONT_ACCEPT_SAME_RFID_TWICE
 
 /* uncomment the below line to resume playback if the RFID that started the
  * playback is detected again
  * um die Wiedergabe fortzusetzen, wenn die selbe RFID erkannt wird, die bereits
  * abgespielt wird, in der nächste Zeile den Kommentar entfernen
  */
-//#define RESUME_ON_SAME_RFID
+#define RESUME_ON_SAME_RFID
 
 /* #################################################################################################
  * ##### normally, you don't have to edit lines below                   ############################
