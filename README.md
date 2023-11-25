@@ -1,60 +1,56 @@
 # TonUINO
+
 Die DIY Musikbox (nicht nur) für Kinder
 
 Dies ist die offizielle Software für die Musikbox, die [hier](https://www.tonuino.de/TNG) beschrieben ist. 
 
 Falls du Interesse daran hast, zur Weiterentwicklung des TonUINO-Projekts beizutragen, bist du herzlich eingeladen, dich zu beteiligen. Für Diskussionen verwende bitte das [Forum](https://discourse.voss.earth). Dort findest du auch weitere Anleitungen und bekommst Hilfe bei Problemen. 
 
-# Anleitung zum Compilieren
+## Anleitung zum Compilieren
 
 Allgemeine Anleitungen zum Einrichten der IDE findet man hier [www.tonuino.de/TNG](https://www.tonuino.de/TNG) und hier [www.leiterkartenpiraten.de](https://www.leiterkartenpiraten.de)
 
-## Arduino IDE
+### Arduino IDE
+
 - Es ist unbedingt darauf zu achten, das das Verzeichnis in das das Repository gecloned oder heruntergeladen wird (also das Verzeichnis, in dem schließlich auch die TonUINO-TNG.ino zu finden ist, genau so heißt, wie die ino Datei, also in diesem Fall "TonUINO-TNG"!
-
-- Bei der classic und AiO HW Variante muss die Datei 'platform.local.txt' in den avr HW Ordner kopiert werden. Dieser Ordner ist gewöhnlich folgender:  
-
-```
-    Windows:  
-      Classic:  C:\Users\<Benutzer>\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.6
-      AiO:      C:\Users\<Benutzer>\AppData\Local\Arduino15\packages\LGT8fx Boards\hardware\avr\1.0.7
-
-    Linux:  
-      Classic:  ~/.arduino15/packages/arduino/hardware/avr/1.8.6
-      Aio:      ~/.arduino15/packages/LGT8fx Boards/hardware/avr/1.0.7
-
-    MacOS 13.x:  
-      Classic:  ~/Library/Arduino15/packages/arduino/hardware/avr/1.8.6
-      AiO:      ~/Library/Arduino15/packages/LGT8fx Boards/hardware/avr/1.0.7
-```
-
+- Bei der classic und AiO HW Variante muss die Datei 'platform.local.txt' in den avr HW Ordner kopiert werden. Dieser Ordner ist gewöhnlich folgender:
+  - Windows:
+    - Classic: `C:\Users\<Benutzer>\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.6`
+    - AiO: `C:\Users\<Benutzer>\AppData\Local\Arduino15\packages\LGT8fx Boards\hardware\avr\1.0.7`
+  - Linux:
+    - Classic: `~/.arduino15/packages/arduino/hardware/avr/1.8.6`
+    - AiO: `~/.arduino15/packages/LGT8fx Boards/hardware/avr/1.0.7`
+  - MacOS 13.x:
+    - Classic: `~/Library/Arduino15/packages/arduino/hardware/avr/1.8.6`
+    - AiO: `~/Library/Arduino15/packages/LGT8fx Boards/hardware/avr/1.0.7`
 - Man findet den Ordner auch, wenn man die Datei platform.txt sucht.  
-
 - Für die AiOplus HW Variante sind keine Änderungen notwendig  
+- Die HW Variante (TonUINO_Classic, ALLinONE oder ALLinONE_Plus) sowie die Button Konfiguration (THREEBUTTONS, FIVEBUTTONS oder BUTTONS3X3) muss in der Datei constants.hpp durch Entfernen des entsprechenden Kommentars angegeben werden.
 
-- Die HW Variante (TonUINO_Classic, ALLinONE oder ALLinONE_Plus) sowie die Button Konfiguration (THREEBUTTONS, FIVEBUTTONS oder BUTTONS3X3) muss in der Datei constants.hpp durch Entfernen des entsprechenden Kommentars angegeben werden. 
+### platform.io
 
-## platform.io
 - geht out-of-the-box
 
-## Libraries
+### Libraries
+
 - Es müssen folgende Versionen der Libraries verwendet werden:  
-    - jchristensen/JC_Button: 2.1.2  
-    - miguelbalboa/MFRC522: 1.4.10  
-    - makuna/DFPlayer Mini Mp3 by Makuna: 1.2.3
-    - adafruit/Adafruit NeoPixel: 1.11.0 (optional, nur bei Feature NEO_RING notwendig)
+  - jchristensen/JC_Button: 2.1.2  
+  - miguelbalboa/MFRC522: 1.4.10  
+  - makuna/DFPlayer Mini Mp3 by Makuna: 1.2.3
+  - adafruit/Adafruit NeoPixel: 1.11.0 (optional, nur bei Feature NEO_RING notwendig)
 
-
-# Installation
+## Installation
 
 Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.1.2 geändert. Hier kann man die Dateien downloaden: [tonuino.github.io/TonUINO-TNG/sd-card.zip](https://tonuino.github.io/TonUINO-TNG/sd-card.zip)
 
-# Change Log
+## Change Log
 
-## Version 3.1.5 (21.11.2023)
+### Version 3.1.5 (21.11.2023)
+
 - [Issue 132](https://github.com/tonuino/TonUINO-TNG/issues/132): Support DF Player MP3-TF-16P V3.0 with the chip MH2024K-24SS
 
-## Version 3.1.4 (20.11.2023)
+### Version 3.1.4 (20.11.2023)
+
 - [Issue 138](https://github.com/tonuino/TonUINO-TNG/issues/138): Two new options for when the same RFID card is inserted
 - [Issue 130](https://github.com/tonuino/TonUINO-TNG/issues/130): Add circuit diagram
 - [Issue 133](https://github.com/tonuino/TonUINO-TNG/issues/133): Cards with version 1 don't work
@@ -73,7 +69,8 @@ Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.1.2 geän
 - [Issue 104](https://github.com/tonuino/TonUINO-TNG/issues/104): Use bad framework-lgt8fx
 - [Issue 099](https://github.com/tonuino/TonUINO-TNG/issues/99): Use new DFPlayer Mini Mp3 v1.2.1 Library
 
-## Version 3.1.3 (03.08.2023)
+### Version 3.1.3 (03.08.2023)
+
 - [Issue 073](https://github.com/tonuino/TonUINO-TNG/issues/73): Support LED or NeoPixel Ring
 - [Issue 095](https://github.com/tonuino/TonUINO-TNG/issues/95): React on 3x3 Button Board also in Play State
 - [Issue 088](https://github.com/tonuino/TonUINO-TNG/issues/88): Flash reset during startup should not open the admin menu
@@ -91,7 +88,8 @@ Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.1.2 geän
 - Viele Fehlerkorrekturen und Verbesserungen
 - [Issue 019](https://github.com/tonuino/TonUINO-TNG/issues/19): Implement support for the 3x3 Button board
 
-## Version 3.1.2 (03.03.2023)
+### Version 3.1.2 (03.03.2023)
+
 - [Issue 062](https://github.com/tonuino/TonUINO-TNG/issues/62): Add offline TTS coqui to text_to_speach
 - [Issue 067](https://github.com/tonuino/TonUINO-TNG/issues/67): Add a hint in the admin menu that the card has to be removed
 - [Issue 065](https://github.com/tonuino/TonUINO-TNG/issues/65): Increase dfPlayer_timeUntilStarts
@@ -102,7 +100,8 @@ Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.1.2 geän
 - [Issue 039](https://github.com/tonuino/TonUINO-TNG/issues/39): No pause if card is removed too early
 - [Issue 028](https://github.com/tonuino/TonUINO-TNG/issues/28): Revise Button behavior
 
-## Version 3.1.1 (15.01.2023)
+### Version 3.1.1 (15.01.2023)
+
 - [Issue 045](https://github.com/tonuino/TonUINO-TNG/issues/45): audio_messages_de.txt isn't up to date.
 - [Issue 044](https://github.com/tonuino/TonUINO-TNG/issues/44): Statemachine remains in StartPlay forever is mp3 files missing
 - [Issue 034](https://github.com/tonuino/TonUINO-TNG/issues/34): Unit Test Framework and example Tests
@@ -116,14 +115,16 @@ Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.1.2 geän
 - [Issue 004](https://github.com/tonuino/TonUINO-TNG/issues/4): Implement reaction to empty card
 - [Issue 005](https://github.com/tonuino/TonUINO-TNG/issues/5): Update to use new mp3 library version 1.1.0
 
-## Version 3.1 (13.10.2022)
+### Version 3.1 (13.10.2022)
+
 - Unterstützung für alle Platinen der Leiterkartenpiraten hinzugefügt (über einfaches #define in der `src/constants.hpp` konfigurierbar)
   - TonUINO Classic
   - All-in-One
   - All-in-One Plus
   - fix for NTAG213
 
-## Version 3.0 (xx.xx.xxxx) - by Boerge1
+### Version 3.0 (xx.xx.xxxx) - by Boerge1
+
 - vollständiges Refactoring mit State-Machine
 - Die Main-Loop läuft jetzt stabil mit 50 ms
 - Neues Feature: neuer Mode: Hörbuch einzeln (nur ein Titel wird gespielt und Fortschritt gespeichert)
@@ -132,7 +133,8 @@ Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.1.2 geän
 - Das Admin-Menü kann an jeder Stelle abgebrochen werden
 - Viele weitere Verbesserungen und Bug-Fixes
 
-## Version 2.1 (xx.xx.xxxx) noch WIP
+### Version 2.1 (xx.xx.xxxx) noch WIP
+
 - Partymodus hat nun eine Queue -> jedes Lied kommt nur genau 1x vorkommt
 - Neue Wiedergabe-Modi "Spezialmodus Von-Bis" - Hörspiel, Album und Party -> erlaubt z.B. verschiedene Alben in einem Ordner zu haben und je mit einer Karte zu verknüpfen
 - Admin-Menü
@@ -145,10 +147,11 @@ Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.1.2 geän
 - Modikationskarten (Sleeptimer, Tastensperre, Stopptanz, KiTa-Modus)
 - Admin-Menü kann abgesichert werden
 
-## Version 2.01 (01.11.2018)
+### Version 2.01 (01.11.2018)
+
 - kleiner Fix um die Probleme beim Anlernen von Karten zu reduzieren
 
-## Version 2.0 (26.08.2018)
+### Version 2.0 (26.08.2018)
 
 - Lautstärke wird nun über einen langen Tastendruck geändert
 - bei kurzem Tastendruck wird der nächste / vorherige Track abgespielt (je nach Wiedergabemodus nicht verfügbar)
