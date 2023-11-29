@@ -46,8 +46,8 @@
  * um den Drehgeber zu unterstützen bitte in der nächste Zeile den Kommentar entfernen (nur für AioPlus)
  */
 #define ROTARY_ENCODER
-inline constexpr uint8_t   rotaryEncoderClkPin    = 31;
-inline constexpr uint8_t   rotaryEncoderDtPin     = 32;
+inline constexpr uint8_t   rotaryEncoderClkPin    = 36; // default: 31
+inline constexpr uint8_t   rotaryEncoderDtPin     = 37; // default: 32
 
 /* uncomment the below line to enable the poti for volume setting
  * um den Poti zu unterstützen bitte in der nächste Zeile den Kommentar entfernen
