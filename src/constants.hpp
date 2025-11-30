@@ -77,7 +77,7 @@
 //#define TonUINO_Every
 //#define TonUINO_Every_4808
 //#define ALLinONE
-//#define ALLinONE_Plus
+#define ALLinONE_Plus
 //#define TonUINO_Esp32 100 // Esp32 Nano
 
 #include "gpioHelper.hpp"
@@ -143,7 +143,7 @@
 /* uncomment the below line to enable the rotary encoder for volume setting
  * um den Drehgeber zu unterstützen bitte in der nächste Zeile den Kommentar entfernen
  */
-//#define ROTARY_ENCODER
+#define ROTARY_ENCODER
 /* uncomment the below line to enable the rotary encoder also for next and previous (only one click in one second)
  * um den Drehgeber auch für vor und zurück zu unterstützen bitte in der nächste Zeile den Kommentar entfernen
  */
@@ -320,7 +320,7 @@ inline constexpr unsigned long btModulePairingPulse    = 500;
  * um die Batterie Spannungsmessung zu aktivieren, in der nächste Zeile den Kommentar entfernen
  * (nicht für ALLinONE, nicht empfohlen für TonUINO_Classic)
  */
-//#define BAT_VOLTAGE_MEASUREMENT
+#define BAT_VOLTAGE_MEASUREMENT
 
 #ifdef BAT_VOLTAGE_MEASUREMENT
 #if not defined(ALLinONE_Plus) and not defined(ALLinONE)
@@ -344,11 +344,11 @@ inline constexpr float   voltageMeasurementCorrection  = 0.710; // Spannungsteil
 #endif
 
 // for Li-Ion
-inline constexpr float   batVoltageLow                 = 2.95;
-inline constexpr float   batVoltageEmpty               = 2.90;
+// inline constexpr float   batVoltageLow                 = 2.95;
+// inline constexpr float   batVoltageEmpty               = 2.90;
 // for Li-PO
-//inline constexpr float   batVoltageLow                 = 3.40;
-//inline constexpr float   batVoltageEmpty               = 3.20;
+inline constexpr float   batVoltageLow                 = 3.40;
+inline constexpr float   batVoltageEmpty               = 3.20;
 #endif // BAT_VOLTAGE_MEASUREMENT
 
 // ######################################################################
