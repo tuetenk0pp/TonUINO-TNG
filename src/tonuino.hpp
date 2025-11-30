@@ -11,8 +11,15 @@
 #include "mp3.hpp"
 #include "modifier.hpp"
 #include "timer.hpp"
+#include "batVoltage.hpp"
 #ifdef NEO_RING
 #include "ring.hpp"
+#endif
+#ifdef TonUINO_Esp32
+#include "webservice.hpp"
+#endif
+#ifdef USE_LED_BUTTONS
+#include "led_manager.hpp"
 #endif
 
 class Tonuino {
@@ -28,18 +35,28 @@ public:
 
   void       nextTrack(uint8_t tracks = 1, bool fromOnPlayFinished = false);
   void   previousTrack(uint8_t tracks = 1);
+  void     jumpToTrack(uint8_t track);
 
   void resetActiveModifier   () { activeModifier = &noneModifier; }
   Modifier& getActiveModifier() { return *activeModifier; }
 
   void setStandbyTimer();
   void disableStandbyTimer();
+  unsigned long getRemainingStandbyTimer() { return standbyTimer.remainingTime(); }
 
-  void setCard  (const nfcTagObject   &newCard) { myCard = newCard; setFolder(&myCard.nfcFolderSettings); }
-  const nfcTagObject& getCard() const           { return myCard; }
-  void setFolder(folderSettings *newFolder    ) { myFolder = newFolder; }
-  uint8_t getFolder()                           { return myFolder->folder; }
-  bool playingCard()                            { return myFolder == &myCard.nfcFolderSettings; }
+  void setMyFolder(const folderSettings &newFolder, bool a_myFolderIsCard) {
+#ifdef STORE_LAST_CARD
+    if (not (myFolder == newFolder)) {
+      LOG(init_log, s_debug, F("set last, folder: "), newFolder.folder, F(", mode: "), static_cast<uint8_t>(newFolder.mode));
+      settings.writeExtShortCutToFlash(lastSortCut, newFolder);
+    }
+#endif
+    myFolderIsCard = a_myFolderIsCard;
+    myFolder = newFolder;
+  }
+  const folderSettings& getMyFolder() const     { return myFolder; }
+  uint8_t getFolder()                           { return myFolder.folder; }
+  bool playingCard()                            { return myFolderIsCard; }
 
   Mp3&      getMp3      () { return mp3      ; }
   Commands& getCommands () { return commands ; }
@@ -47,6 +64,12 @@ public:
   Chip_card& getChipCard() { return chip_card; }
 #ifdef NEO_RING
   Ring&     getRing     () { return ring     ; }
+#endif
+#ifdef USE_LED_BUTTONS
+  LedManager& getLedManager() { return ledManager; }
+#endif
+#ifdef BAT_VOLTAGE_MEASUREMENT
+  BatVoltage& getBatVoltage() { return batVoltage; }
 #endif
   static uint32_t generateRamdomSeed();
 
@@ -56,15 +79,34 @@ public:
 
   void shutdown();
 
+  uint16_t getNumTracksInFolder() const {return numTracksInFolder; }
+
+  bool specialCard(const folderSettings &nfcTag);
+
+  void set_shutdown() { request_shutdown = true; }
+
+#ifdef BT_MODULE
+  bool isBtModuleOn() { return btModuleOn; }
+  void switchBtModuleOnOff();
+  void btModulePairing();
+#endif
+
+  void switchStandbyTimerOnOff();
+  bool isStandbyTimerOff() { return standbyTimerOff; }
+
 private:
 
-  void checkStandby();
+  void setup_timer();
+  void setup_adc();
 
-  bool specialCard(const nfcTagObject &nfcTag);
+  void checkStandby();
 
   Settings             settings            {};
   Mp3                  mp3                 {settings};
   Buttons              buttons             {};
+#ifdef BAT_VOLTAGE_MEASUREMENT
+       BatVoltage      batVoltage          {mp3};
+#endif
 #ifdef SerialInputAsCommand
   SerialInput          serialInput         {};
 #endif
@@ -75,7 +117,10 @@ private:
   RotaryEncoder        rotaryEncoder       {settings};
 #endif
 #ifdef POTI
-  Poti                 poti                {settings, mp3};
+  Poti                 poti                {mp3};
+#endif
+#ifdef TonUINO_Esp32
+  Webservice           webservice          {settings, mp3};
 #endif
   Commands             commands            {
                                             settings
@@ -92,30 +137,49 @@ private:
 #ifdef POTI
                                           , &poti
 #endif
+#ifdef TonUINO_Esp32
+                                          , &webservice
+#endif
                                            };
   Chip_card            chip_card           {mp3};
 #ifdef NEO_RING
   Ring                 ring                {};
 #endif
+#ifdef USE_LED_BUTTONS
+  LedManager           ledManager          {};
+#endif
 
   friend class Base;
 
-  Modifier             noneModifier        {*this, mp3};
-  SleepTimer           sleepTimer          {*this, mp3};
-  FreezeDance          freezeDance         {*this, mp3};
-  Locked               locked              {*this, mp3};
-  ToddlerMode          toddlerMode         {*this, mp3};
-  KindergardenMode     kindergardenMode    {*this, mp3};
-  RepeatSingleModifier repeatSingleModifier{*this, mp3};
-  //FeedbackModifier     feedbackModifier    {*this, mp3};
+  Modifier             noneModifier        {};
+  SleepTimer           sleepTimer          {};
+  DanceGame            danceGame           {};
+  ToddlerMode          toddlerMode         {};
+  KindergardenMode     kindergardenMode    {};
+  RepeatSingleModifier repeatSingleModifier{};
+#ifdef MODIFICATION_CARD_PAUSE_AFTER_TRACK
+  PauseAfterTrack      pauseAfterTrack     {};
+#endif
+#ifdef MODIFICATION_CARD_JUKEBOX
+  JukeboxModifier      jukeboxModifier     {};
+#endif
 
   Modifier*            activeModifier      {&noneModifier};
 
   Timer                standbyTimer        {};
 
-  nfcTagObject         myCard              {};
-  folderSettings*      myFolder            {&myCard.nfcFolderSettings};
+  folderSettings       myFolder            {};
+  bool                 myFolderIsCard      {};
   uint16_t             numTracksInFolder   {};
+
+  bool                 request_shutdown    {};
+
+#ifdef BT_MODULE
+  bool                 btModuleOn          {};
+  Timer                btModulePairingTimer{};
+#endif
+
+  bool                 standbyTimerOff     {};
 };
 
 #endif /* SRC_TONUINO_HPP_ */

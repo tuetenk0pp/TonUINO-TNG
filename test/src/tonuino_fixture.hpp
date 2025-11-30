@@ -15,6 +15,7 @@ public:
   , tonuino{Tonuino::getTonuino()}
   {
     getSettings().resetSettings();
+    tonuino.resetActiveModifier();
 #ifdef BUTTONS3X3
     pin_value[button3x3Pin] = Buttons3x3::maxLevel;
 #endif
@@ -34,7 +35,7 @@ public:
   MFRC522&   getMFRC522 () { return getChipCard().mfrc522; }
   Modifier&  getModifier() { return tonuino.getActiveModifier(); }
 
-  uint8_t    getVolume  () { return getMp3().volume; }
+  uint8_t    getVolume  () { return *getMp3().volume; }
 
   Initializer initializer;
 
@@ -295,6 +296,13 @@ public:
       EXPECT_TRUE(getMp3().is_stopped());
       return;
     }
+    if (SM_tonuino::is_in_state<StartPlay<Play>>()) {
+      execute_cycle(); // start pling
+      getMp3().end_track();
+      execute_cycle(); // start timer
+      current_time += dfPlayer_timeUntilStarts+1;
+      execute_cycle();
+    }
     if (SM_tonuino::is_in_state<Pause>()) {
       button_for_command(command::pause, state_for_command::idle_pause);
       EXPECT_TRUE(SM_tonuino::is_in_state<Play>());
@@ -328,14 +336,14 @@ public:
     }
   }
 
-  void goto_play(const folderSettings& card) {
+  void goto_play(const folderSettings& card, uint16_t track_count = 99) {
     goto_idle();
-    card_in(card);
-    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay>());
+    card_in(card, track_count);
+    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>());
 
     // play t_262_pling
     execute_cycle();
-    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay>());
+    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>());
     EXPECT_TRUE(getMp3().is_playing_mp3());
     EXPECT_EQ(getMp3().df_mp3_track, static_cast<uint16_t>(mp3Tracks::t_262_pling));
 
@@ -421,7 +429,7 @@ public:
   void leave_start_play() {
     // play t_262_pling
     execute_cycle();
-    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay>());
+    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>());
     EXPECT_TRUE(getMp3().is_playing_mp3());
     EXPECT_EQ(getMp3().df_mp3_track, static_cast<uint16_t>(mp3Tracks::t_262_pling));
 

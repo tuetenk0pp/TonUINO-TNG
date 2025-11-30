@@ -21,7 +21,7 @@ TEST_F(tonuino_test_fixture, initial_state) {
   EXPECT_EQ(pin_mode[shutdownPin], OUTPUT);
 
 #ifdef TonUINO_Classic
-  EXPECT_EQ(pin_value[shutdownPin], LOW);
+  EXPECT_EQ(pin_value[shutdownPin], HIGH);
 #endif
 
 #if defined ALLinONE || defined ALLinONE_Plus
@@ -35,9 +35,9 @@ TEST_F(tonuino_test_fixture, initial_state) {
 
   EXPECT_EQ(getSettings().cookie              ,  cardCookie);
   EXPECT_EQ(getSettings().version             , cardVersion);
-  EXPECT_EQ(getSettings().maxVolume           ,          25);
-  EXPECT_EQ(getSettings().minVolume           ,           5);
-  EXPECT_EQ(getSettings().initVolume          ,          15);
+  EXPECT_EQ(getSettings().spkMaxVolume        ,          25);
+  EXPECT_EQ(getSettings().spkMinVolume        ,           5);
+  EXPECT_EQ(getSettings().spkInitVolume       ,          15);
   EXPECT_EQ(getSettings().eq                  ,           1);
   EXPECT_EQ(getSettings().dummy               ,       false);
   EXPECT_EQ(getSettings().standbyTimer        ,           0);
@@ -54,7 +54,7 @@ TEST_F(tonuino_test_fixture, initial_state) {
   EXPECT_EQ(getSettings().pauseWhenCardRemoved,           0);
 
   EXPECT_TRUE(getMp3().called_begin);
-  EXPECT_EQ(getMp3().current_volume, getSettings().initVolume);
+  EXPECT_EQ(getMp3().current_volume, getSettings().spkInitVolume);
   EXPECT_EQ(getMp3().current_eq    , getSettings().eq-1      );
 
   EXPECT_TRUE(getMFRC522().called_Init);
@@ -91,7 +91,7 @@ TEST_F(tonuino_test_fixture, sunny_day_play) {
   Print::clear_output();
 
   card_in(card, track_count);
-  EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay>());
+  EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>());
 
   leave_start_play();
 
@@ -210,7 +210,7 @@ TEST_F(tonuino_test_fixture, shutdown_in_idle) {
   EXPECT_EQ(pin_value[shutdownPin], LOW);
 #endif
 #ifdef TonUINO_Classic
-  EXPECT_EQ(pin_value[shutdownPin], HIGH);
+  EXPECT_EQ(pin_value[shutdownPin], LOW);
 #endif
   EXPECT_TRUE(getMp3()    .called_sleep        );
   EXPECT_TRUE(getMFRC522().called_AntennaOff   );
@@ -241,7 +241,7 @@ TEST_F(tonuino_test_fixture, shutdown_in_pause) {
   EXPECT_EQ(pin_value[shutdownPin], LOW);
 #endif
 #ifdef TonUINO_Classic
-  EXPECT_EQ(pin_value[shutdownPin], HIGH);
+  EXPECT_EQ(pin_value[shutdownPin], LOW);
 #endif
   EXPECT_TRUE(getMp3()    .called_sleep        );
   EXPECT_TRUE(getMFRC522().called_AntennaOff   );
@@ -272,7 +272,7 @@ TEST_F(tonuino_test_fixture, shortcutx_in_idle) {
     // button shortcutx
     button_for_command(cmd, state_for_command::idle_pause);
 
-    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay>());
+    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>());
 
     leave_start_play();
 
@@ -305,7 +305,7 @@ TEST_F(tonuino_test_fixture, shortcutx_in_pause) {
     // button shortcut
     button_for_command(cmd, state_for_command::idle_pause);
 
-    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay>());
+    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>());
 
     leave_start_play();
 
@@ -323,6 +323,10 @@ TEST_F(tonuino_test_fixture, shortcutx_in_pause) {
 
 TEST_F(tonuino_test_fixture, shortcut3x3_in_idle) {
 
+  // reset linearAnalogKeypad from longpress
+  reset_value_for_3x3();
+  execute_cycle();
+
   uint8_t folder = 3;
   uint16_t track_count = 99;
   getMp3().set_folder_track_count(folder, track_count);
@@ -334,14 +338,14 @@ TEST_F(tonuino_test_fixture, shortcut3x3_in_idle) {
     Print::clear_output();
 
     const int address = startAddressExtraShortcuts + index * sizeof(folderSettings);
-    EEPROM_put(address, fs);
+    Settings::EEPROM_put(address, fs);
 
     set_value_for_3x3(index);
     execute_cycle();
     reset_value_for_3x3();
     execute_cycle();
 
-    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay>()) << index;
+    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>()) << index;
 
     leave_start_play();
 
@@ -363,7 +367,7 @@ TEST_F(tonuino_test_fixture, shortcut3x3_in_idle) {
     Print::clear_output();
 
     const int address = startAddressExtraShortcuts + (Buttons3x3::numLevels+index) * sizeof(folderSettings);
-    EEPROM_put(address, fs);
+    Settings::EEPROM_put(address, fs);
 
     set_value_for_3x3(index);
     execute_cycle();
@@ -372,7 +376,7 @@ TEST_F(tonuino_test_fixture, shortcut3x3_in_idle) {
     reset_value_for_3x3();
     execute_cycle();
 
-    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay>()) << index;
+    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>()) << index;
 
     leave_start_play();
 
@@ -388,6 +392,11 @@ TEST_F(tonuino_test_fixture, shortcut3x3_in_idle) {
 }
 
 TEST_F(tonuino_test_fixture, shortcut3x3_in_pause) {
+
+  // reset linearAnalogKeypad from longpress
+  reset_value_for_3x3();
+  execute_cycle();
+
   uint8_t folder = 3;
   uint16_t track_count = 99;
   getMp3().set_folder_track_count(folder, track_count);
@@ -399,14 +408,14 @@ TEST_F(tonuino_test_fixture, shortcut3x3_in_pause) {
     Print::clear_output();
 
     const int address = startAddressExtraShortcuts + index * sizeof(folderSettings);
-    EEPROM_put(address, fs);
+    Settings::EEPROM_put(address, fs);
 
     set_value_for_3x3(index);
     execute_cycle();
     reset_value_for_3x3();
     execute_cycle();
 
-    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay>()) << index;
+    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>()) << index;
 
     leave_start_play();
 
@@ -428,7 +437,7 @@ TEST_F(tonuino_test_fixture, shortcut3x3_in_pause) {
     Print::clear_output();
 
     const int address = startAddressExtraShortcuts + (Buttons3x3::numLevels+index) * sizeof(folderSettings);
-    EEPROM_put(address, fs);
+    Settings::EEPROM_put(address, fs);
 
     set_value_for_3x3(index);
     execute_cycle();
@@ -437,7 +446,7 @@ TEST_F(tonuino_test_fixture, shortcut3x3_in_pause) {
     reset_value_for_3x3();
     execute_cycle();
 
-    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay>()) << index;
+    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>()) << index;
 
     leave_start_play();
 
@@ -453,6 +462,11 @@ TEST_F(tonuino_test_fixture, shortcut3x3_in_pause) {
 }
 
 TEST_F(tonuino_test_fixture, shortcut3x3_in_play) {
+
+  // reset linearAnalogKeypad from longpress
+  reset_value_for_3x3();
+  execute_cycle();
+
   uint8_t folder = 3;
   uint16_t track_count = 99;
   getMp3().set_folder_track_count(folder, track_count);
@@ -464,14 +478,14 @@ TEST_F(tonuino_test_fixture, shortcut3x3_in_play) {
     Print::clear_output();
 
     const int address = startAddressExtraShortcuts + index * sizeof(folderSettings);
-    EEPROM_put(address, fs);
+    Settings::EEPROM_put(address, fs);
 
     set_value_for_3x3(index);
     execute_cycle();
     reset_value_for_3x3();
     execute_cycle();
 
-    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay>()) << index;
+    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>()) << index;
 
     leave_start_play();
 
@@ -493,7 +507,7 @@ TEST_F(tonuino_test_fixture, shortcut3x3_in_play) {
     Print::clear_output();
 
     const int address = startAddressExtraShortcuts + (Buttons3x3::numLevels+index) * sizeof(folderSettings);
-    EEPROM_put(address, fs);
+    Settings::EEPROM_put(address, fs);
 
     set_value_for_3x3(index);
     execute_cycle();
@@ -502,7 +516,7 @@ TEST_F(tonuino_test_fixture, shortcut3x3_in_play) {
     reset_value_for_3x3();
     execute_cycle();
 
-    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay>()) << index;
+    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>()) << index;
 
     leave_start_play();
 
@@ -724,21 +738,21 @@ TEST_F(tonuino_test_fixture, adm_end_in_admin) {
 // =================== volume
 TEST_F(tonuino_test_fixture, volume_settings) {
 
-  getSettings().maxVolume  = 22;
-  getSettings().minVolume  = 11;
-  getSettings().initVolume = 13;
+  getSettings().spkMaxVolume  = 22;
+  getSettings().spkMinVolume  = 11;
+  getSettings().spkInitVolume = 13;
 
   getSettings().writeSettingsToFlash();
 
-  getSettings().maxVolume  = 20;
-  getSettings().minVolume  = 10;
-  getSettings().initVolume = 12;
+  getSettings().spkMaxVolume  = 20;
+  getSettings().spkMinVolume  = 10;
+  getSettings().spkInitVolume = 12;
 
   tonuino.setup();
 
-  EXPECT_EQ(getSettings().maxVolume , 22);
-  EXPECT_EQ(getSettings().minVolume , 11);
-  EXPECT_EQ(getSettings().initVolume, 13);
+  EXPECT_EQ(getSettings().spkMaxVolume , 22);
+  EXPECT_EQ(getSettings().spkMinVolume , 11);
+  EXPECT_EQ(getSettings().spkInitVolume, 13);
 
   EXPECT_EQ(getVolume(), 13);
 }
@@ -811,15 +825,15 @@ TEST_F(tonuino_test_fixture, pause_if_card_removed_works) {
 
   uint16_t track_count = 10;
 
-  getSettings().pauseWhenCardRemoved = 1;
-
   int ind = 0;
   for (folderSettings card: test_data) {
     goto_idle();
+    getSettings().pauseWhenCardRemoved = 1;
+
     Print::clear_output();
 
     card_in(card, track_count);
-    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay>());
+    EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>());
 
     leave_start_play();
 
@@ -841,7 +855,42 @@ TEST_F(tonuino_test_fixture, pause_if_card_removed_works) {
     ASSERT_TRUE(getMp3().is_playing_folder()) << "Index: " << ind;
     EXPECT_EQ(getMp3().df_folder, card.folder);
 
+    // button pause --> pause
+    button_for_command(command::pause, state_for_command::play);
+    ASSERT_TRUE(SM_tonuino::is_in_state<Pause>()) << "Index: " << ind;
+    execute_cycle();
+    EXPECT_TRUE(getMp3().is_pause());
+
+    // button pause --> remains in pause if card is out
     card_out();
+    button_for_command(command::pause, state_for_command::play);
+    ASSERT_TRUE(SM_tonuino::is_in_state<Pause>()) << "Index: " << ind;
+    execute_cycle();
+    EXPECT_TRUE(getMp3().is_pause());
+
+    // card in --> play
+    card_in(card, track_count);
+    ASSERT_TRUE(SM_tonuino::is_in_state<Play>()) << "Index: " << ind;
+    execute_cycle_for_ms(time_check_play);
+    ASSERT_TRUE(getMp3().is_playing_folder()) << "Index: " << ind;
+    EXPECT_EQ(getMp3().df_folder, card.folder);
+
+    // button pause --> pause
+    button_for_command(command::pause, state_for_command::play);
+    ASSERT_TRUE(SM_tonuino::is_in_state<Pause>()) << "Index: " << ind;
+    execute_cycle();
+    EXPECT_TRUE(getMp3().is_pause());
+
+    // button pause --> play if card is in
+    button_for_command(command::pause, state_for_command::play);
+    ASSERT_TRUE(SM_tonuino::is_in_state<Play>()) << "Index: " << ind;
+    execute_cycle_for_ms(time_check_play);
+    ASSERT_TRUE(getMp3().is_playing_folder()) << "Index: " << ind;
+    EXPECT_EQ(getMp3().df_folder, card.folder);
+
+    card_out();
+    getSettings().pauseWhenCardRemoved = 0;
+
     ++ind;
   }
 //  EXPECT_TRUE(false) << "log: " << Print::get_output();
@@ -852,20 +901,19 @@ TEST_F(tonuino_test_fixture, pause_if_card_removed_card_out_early) {
   folderSettings card = { 1, pmode_t::album        , 0, 0 };
   uint16_t track_count = 10;
 
-  getSettings().pauseWhenCardRemoved = 1;
-
   goto_idle();
+  getSettings().pauseWhenCardRemoved = 1;
   Print::clear_output();
 
   card_in(card, track_count);
-  EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay>());
+  EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>());
 
   // card out
   card_out();
 
   // play t_262_pling
   execute_cycle_for_ms(time_check_play);
-  EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay>());
+  EXPECT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>());
   EXPECT_TRUE(getMp3().is_playing_mp3());
   EXPECT_EQ(getMp3().df_mp3_track, static_cast<uint16_t>(mp3Tracks::t_262_pling));
 
@@ -960,15 +1008,14 @@ TEST_F(tonuino_test_fixture, pause_if_card_removed_card_in_with_other) {
 
   uint16_t track_count = 10;
 
-  getSettings().pauseWhenCardRemoved = 1;
-
   int ind = 0;
   for (card_data_2 data: test_data) {
     goto_idle();
+    getSettings().pauseWhenCardRemoved = 1;
     Print::clear_output();
 
     card_in(data.card1, track_count);
-    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay>()) << "Index: " << ind;
+    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>()) << "Index: " << ind;
 
     leave_start_play();
 
@@ -985,7 +1032,7 @@ TEST_F(tonuino_test_fixture, pause_if_card_removed_card_in_with_other) {
 
     // card in other card --> StartPlay
     card_in(data.card2, track_count);
-    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay>()) << "Index: " << ind;
+    ASSERT_TRUE(SM_tonuino::is_in_state<StartPlay<Play>>()) << "Index: " << ind;
 
     leave_start_play();
 
@@ -995,8 +1042,204 @@ TEST_F(tonuino_test_fixture, pause_if_card_removed_card_in_with_other) {
     EXPECT_EQ(getMp3().df_folder, data.card2.folder);
 
     card_out();
+    getSettings().pauseWhenCardRemoved = 0;
     ++ind;
   }
 
 //  EXPECT_TRUE(false) << "log: " << Print::get_output();
 }
+
+// =================== next/previous (play)
+TEST_F(tonuino_test_fixture, next_previous_in_play_hoerbuch_1) {
+  const uint8_t folder = 5;
+  uint8_t current_track = 2;
+  folderSettings card = { folder, pmode_t::hoerbuch_1, 0, 0 };
+  getSettings().writeFolderSettingToFlash(folder, current_track);
+  goto_play(card);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), current_track);
+  Print::clear_output();
+
+  button_for_command(command::next, state_for_command::play);
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  EXPECT_EQ(getMp3().df_folder_track, ++current_track);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), current_track);
+
+  button_for_command(command::previous, state_for_command::play);
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  EXPECT_EQ(getMp3().df_folder_track, --current_track);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), current_track);
+
+#ifdef FIVEBUTTONS
+  button_for_command(command::next10, state_for_command::play);
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  current_track+=10;
+  EXPECT_EQ(getMp3().df_folder_track, current_track);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), current_track);
+
+  button_for_command(command::previous10, state_for_command::play);
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  current_track-=10;
+  EXPECT_EQ(getMp3().df_folder_track, current_track);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), current_track);
+#endif
+}
+
+TEST_F(tonuino_test_fixture, next_previous_in_play_hoerbuch) {
+  const uint8_t folder = 5;
+  uint8_t current_track = 2;
+  folderSettings card = { folder, pmode_t::hoerbuch, 0, 0 };
+  getSettings().writeFolderSettingToFlash(folder, current_track);
+  goto_play(card);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), current_track);
+  Print::clear_output();
+
+  button_for_command(command::next, state_for_command::play);
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  EXPECT_EQ(getMp3().df_folder_track, ++current_track);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), current_track);
+
+  button_for_command(command::previous, state_for_command::play);
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  EXPECT_EQ(getMp3().df_folder_track, --current_track);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), current_track);
+
+#ifdef FIVEBUTTONS
+  button_for_command(command::next10, state_for_command::play);
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  current_track+=10;
+  EXPECT_EQ(getMp3().df_folder_track, current_track);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), current_track);
+
+  button_for_command(command::previous10, state_for_command::play);
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  current_track-=10;
+  EXPECT_EQ(getMp3().df_folder_track, current_track);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), current_track);
+#endif
+
+}
+
+// =================== end of hoerbuch
+TEST_F(tonuino_test_fixture, end_play_hoerbuch) {
+  const uint8_t folder = 5;
+  uint8_t track_count = 10;
+  folderSettings card = { folder, pmode_t::hoerbuch, 0, 0 };
+  getSettings().writeFolderSettingToFlash(folder, track_count); // last track
+  goto_play(card, track_count);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), track_count);
+  Print::clear_output();
+
+  // nothing happen on next button
+  button_for_command(command::next, state_for_command::play);
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  EXPECT_EQ(getMp3().df_folder_track, track_count);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), track_count);
+
+  // end if finished
+  getMp3().end_track();
+  execute_cycle();
+  EXPECT_TRUE(getMp3().is_stopped());
+  EXPECT_TRUE(SM_tonuino::is_in_state<Idle>());
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), 1);
+
+  card_out();
+}
+
+TEST_F(tonuino_test_fixture, end_play_hoerbuch_1) {
+  const uint8_t folder = 5;
+  uint8_t track_count = 10;
+  folderSettings card = { folder, pmode_t::hoerbuch_1, 0, 0 };
+  getSettings().writeFolderSettingToFlash(folder, track_count); // last track
+  goto_play(card, track_count);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), track_count);
+  Print::clear_output();
+
+  // nothing happen on next button
+  button_for_command(command::next, state_for_command::play);
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  EXPECT_EQ(getMp3().df_folder_track, track_count);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), track_count);
+
+  // end if finished
+  getMp3().end_track();
+  execute_cycle();
+  EXPECT_TRUE(getMp3().is_stopped());
+  EXPECT_TRUE(SM_tonuino::is_in_state<Idle>());
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), 1);
+
+  card_out();
+}
+
+TEST_F(tonuino_test_fixture, end_play_after_1_track_hoerbuch_1) {
+  const uint8_t folder = 5;
+  uint8_t track_count = 10;
+  folderSettings card = { folder, pmode_t::hoerbuch_1, 0, 0 };
+  getSettings().writeFolderSettingToFlash(folder, track_count-1); // 1 before last track
+  goto_play(card, track_count);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), track_count-1);
+  Print::clear_output();
+
+  // end if finished
+  getMp3().end_track();
+  execute_cycle();
+  EXPECT_TRUE(getMp3().is_stopped());
+  EXPECT_TRUE(SM_tonuino::is_in_state<Idle>());
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), track_count);
+
+  card_out();
+}
+
+TEST_F(tonuino_test_fixture, end_play_after_2_track_hoerbuch_1) {
+  const uint8_t folder = 5;
+  uint8_t track_count = 10;
+  folderSettings card = { folder, pmode_t::hoerbuch_1, 1, 0 };
+  getSettings().writeFolderSettingToFlash(folder, track_count-3); // 1 before last track
+  goto_play(card, track_count);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), track_count-3);
+  Print::clear_output();
+
+  // playing 1st track (track_count-3)
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  EXPECT_EQ(getMp3().df_folder_track, track_count-3);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), track_count-3);
+
+  // playing 1st track (track_count-2)
+  getMp3().end_track();
+  execute_cycle_for_ms(time_check_play);
+  EXPECT_TRUE(getMp3().is_playing_folder());
+  EXPECT_EQ(getMp3().df_folder, card.folder);
+  EXPECT_EQ(getMp3().df_folder_track, track_count-2);
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), track_count-2);
+
+  // end if finished
+  getMp3().end_track();
+  execute_cycle();
+  EXPECT_TRUE(getMp3().is_stopped());
+  EXPECT_TRUE(SM_tonuino::is_in_state<Idle>());
+  EXPECT_EQ(getSettings().readFolderSettingFromFlash(folder), track_count-1);
+
+  card_out();
+}
+

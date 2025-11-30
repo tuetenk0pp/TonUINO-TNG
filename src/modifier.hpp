@@ -7,109 +7,162 @@
 #include "logger.hpp"
 #include "timer.hpp"
 #include "commands.hpp"
+#ifdef MODIFICATION_CARD_JUKEBOX
+#include "queue.hpp"
+#endif
 
 class Tonuino;
 class Mp3;
-struct nfcTagObject;
+struct folderSettings;
 
 class Modifier {
 public:
-  Modifier(Tonuino &tonuino, Mp3 &mp3): tonuino(tonuino), mp3(mp3) {}
+  Modifier() {}
   //virtual ~Modifier() {}
   virtual void loop                () {}
   virtual bool handleNext          () { return false; }
   virtual bool handlePrevious      () { return false; }
   virtual bool handleButton(command ) { return false; }
-  virtual bool handleRFID(const nfcTagObject&)
+  virtual bool handleRFID(const folderSettings&)
                                       { return false; }
   virtual pmode_t getActive        () { return pmode_t::none; }
-  virtual void init         (uint8_t) {}
+  virtual void init(pmode_t, uint8_t) {}
+
+#ifdef TonUINO_Esp32
+  virtual String getDescription    () { return ""; }
+#endif
 
   Modifier& operator=(const Modifier&) = delete;
-protected:
-  Tonuino        &tonuino;
-  Mp3            &mp3;
 };
 
 class SleepTimer: public Modifier {
 public:
-  SleepTimer(Tonuino &tonuino, Mp3 &mp3): Modifier(tonuino, mp3) {}
+  SleepTimer() {}
   void   loop       () final;
+  bool   handleNext () final;
+  bool handleButton(command cmd                  ) final;
+  bool handleRFID  (const folderSettings &newCard) final;
 
   pmode_t getActive () final { return pmode_t::sleep_timer; }
-  void   init(uint8_t) final;
+  void   init(pmode_t, uint8_t) final;
+
+#ifdef TonUINO_Esp32
+  String getDescription() final;
+#endif
 
 private:
   Timer sleepTimer{};
+  bool  stopAfterTrackFinished{};
+  bool  stopAfterTrackFinished_active{};
+  bool  fired{};
+  static constexpr unsigned long maxWaitForTrackFinished = 10ul * 60 *1000; // 10 minutes
 };
 
-class FreezeDance: public Modifier {
+class DanceGame: public Modifier {
 public:
-  FreezeDance(Tonuino &tonuino, Mp3 &mp3): Modifier(tonuino, mp3) {}
+  DanceGame() {}
   void   loop       () final;
 
-  pmode_t getActive () final { return pmode_t::freeze_dance; }
-  void   init(uint8_t) final { setNextStopAtMillis(); }
+  pmode_t getActive ()        final { return mode; }
+  void   init(pmode_t, uint8_t) final;
+
+#ifdef TonUINO_Esp32
+  String getDescription() final;
+#endif
+
+  static constexpr uint8_t minSecondsBetweenStops[]      = {15, 25, 35};
+  static constexpr uint8_t maxSecondsBetweenStops[]      = {30, 40, 50};
+  static constexpr uint8_t addSecondsBetweenStopsFreezeD =  6;
+  static constexpr uint8_t addSecondsBetweenStopsFiWaAi  = 17;
 
 private:
-  void setNextStopAtMillis();
+  void setNextStop(bool addAdvTime);
 
   Timer stopTimer{};
-  static constexpr uint8_t minSecondsBetweenStops =  5;
-  static constexpr uint8_t maxSecondsBetweenStops = 30;
-};
-
-class Locked: public Modifier {
-public:
-  Locked(Tonuino &tonuino, Mp3 &mp3): Modifier(tonuino, mp3) {}
-  bool handleButton(command) final { LOG(modifier_log, s_debug, F("Locked::Button -> LOCKED!"))    ; return true; }
-  bool handleRFID(const nfcTagObject&)
-                             final { LOG(modifier_log, s_debug, F("Locked::RFID -> LOCKED!"))      ; return true; }
-
-  pmode_t getActive()        final { return pmode_t::locked; }
+  pmode_t mode{};
+  uint8_t lastFiWaAi{};
+  uint8_t t{0};
 };
 
 class ToddlerMode: public Modifier {
 public:
-  ToddlerMode(Tonuino &tonuino, Mp3 &mp3): Modifier(tonuino, mp3) {}
+  ToddlerMode() {}
   bool handleButton(command) final { LOG(modifier_log, s_debug, F("ToddlerMode::Button -> LOCKED!")); return true; }
 
   pmode_t getActive()        final { return pmode_t::toddler; }
+
+#ifdef TonUINO_Esp32
+  String getDescription()    final { return "Gesperrt"; }
+#endif
+
 };
 
 class KindergardenMode: public Modifier {
 public:
-  KindergardenMode(Tonuino &tonuino, Mp3 &mp3): Modifier(tonuino, mp3) {}
+  KindergardenMode() {}
   bool handleNext  (                           ) final;
   bool handleButton(command cmd                ) final;
-  bool handleRFID  (const nfcTagObject &newCard) final;
+  bool handleRFID  (const folderSettings &newCard) final;
 
   pmode_t getActive (                          ) final { return pmode_t::kindergarden; }
-  void   init       (uint8_t                   ) final { cardQueued = false; }
+  void   init       (pmode_t, uint8_t          ) final { cardQueued = false; }
+
+#ifdef TonUINO_Esp32
+  String getDescription() final { return "Kita Modus"; }
+#endif
 
 private:
-  nfcTagObject nextCard{};
-  bool cardQueued = false;
+  folderSettings nextCard{};
+  bool cardQueued{false};
 };
 
 class RepeatSingleModifier: public Modifier {
 public:
-  RepeatSingleModifier(Tonuino &tonuino, Mp3 &mp3): Modifier(tonuino, mp3) {}
+  RepeatSingleModifier() {}
   bool   handleNext    () final;
   bool   handlePrevious() final;
   pmode_t getActive    () final { return pmode_t::repeat_single; }
+
+#ifdef TonUINO_Esp32
+  String getDescription() final { return "Wiederhole Track"; }
+#endif
+
 };
 
-// An modifier can also do somethings in addition to the modified action
-// by returning false (not handled) at the end
-// This simple FeedbackModifier will tell the volume before changing it and
-// give some feedback once a RFID card is detected.
-//class FeedbackModifier: public Modifier {
-//public:
-//  FeedbackModifier(Tonuino &tonuino, Mp3 &mp3, const Settings &settings): Modifier(tonuino, mp3, settings) {}
-//  bool handleVolumeDown() final;
-//  bool handleVolumeUp  () final;
-//  bool handleRFID      (const nfcTagObject &newCard) final;
-//};
+#ifdef MODIFICATION_CARD_PAUSE_AFTER_TRACK
+class PauseAfterTrack: public Modifier {
+public:
+  PauseAfterTrack() {}
+  bool   handleNext    () final;
+  pmode_t getActive    () final { return pmode_t::pause_aft_tr; }
+
+#ifdef TonUINO_Esp32
+  String getDescription() final { return "Pause nach jedem Track"; }
+#endif
+
+};
+#endif
+
+#ifdef MODIFICATION_CARD_JUKEBOX
+class JukeboxModifier: public Modifier {
+public:
+  JukeboxModifier() {}
+  bool handleNext  (                           ) final;
+  bool handleButton(command cmd                ) final;
+  bool handleRFID  (const folderSettings &newCard) final;
+
+  pmode_t getActive (                          ) final { return pmode_t::jukebox; }
+  void   init       (pmode_t, uint8_t          ) final { cards.clear(); }
+
+#ifdef TonUINO_Esp32
+  String getDescription() final;
+#endif
+
+private:
+  typedef queue<folderSettings, jukebox_max_cards> card_queue;
+
+  card_queue cards{};
+};
+#endif
 
 #endif /* SRC_MODIFIER_HPP_ */
