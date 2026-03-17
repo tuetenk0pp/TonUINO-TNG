@@ -259,7 +259,7 @@ inline constexpr levelType     dfPlayer_noHeadphoneJackDetectType = levelType::a
  * um die letzte Karte oder den letzten Short Cut wieder abzuspielen, wenn die Play/Pause Taste
  * im Idle State gedrückt wird, in der nächste Zeile den Kommentar entfernen
  */
-//#define REPLAY_ON_PLAY_BUTTON
+#define REPLAY_ON_PLAY_BUTTON
 
 // ######################################################################
 
