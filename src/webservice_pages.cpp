@@ -257,6 +257,8 @@ const char main_html[] PROGMEM = R"rawliteral(
                                                                   <option>Quiz Spiel</option>                                  
                                                                   <option>Memory Spiel</option>                                
                                                                   <option>Bluetooth ein/aus</option>                                
+                                                                  <option>Teekesselchen Spiel</option>                                  
+                                                                  <option>Hörbuch von bis</option>                               
                                                                 </select>                                                      
 <br><label for="folder"         >Folder / Sp1 / Sp2     </label><div class="tooltip"><input type="number" name="folder"             id="folder" value="1" min="1" max="99">  
                                                                   <span class="tooltiptext">Folder</span></div>
@@ -440,7 +442,9 @@ const char settings_html[] PROGMEM = R"rawliteral(
  +'                                                                  <option>Wiederhole</option>                                     '
  +'                                                                  <option>Quiz Spiel</option>                                     '
  +'                                                                  <option>Memory Spiel</option>                                   '
- +'                                                                  <option>Bluetooth ein/aus</option>                                   '
+ +'                                                                  <option>Bluetooth ein/aus</option>                              '
+ +'                                                                  <option>Teekesselchen Spiel</option>                            '
+ +'                                                                  <option>Hörbuch von bis</option>                                '
  +'                                                                </select>                                                         '
  +'<br><label for="sc_folder_n_"   >Folder / Sp1 / Sp2     </label><div class="tooltip"><input type="number" name="sc_folder_n_"      id="sc_folder_n_">  '  
  +'                                                                 <span class="tooltiptext">Folder</span></div>                                         '
@@ -590,6 +594,10 @@ const char wifi_html[] PROGMEM = R"rawliteral(
   <label for='static_ip_dns1'>Primary DNS</label><input id='static_ip_dns1' name='static_ip_dns1' type='text' minlength="7" maxlength="15" size="15" pattern="^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$" value='%DNS1%'>
   <br><br>
   <label for='static_ip_dns2'>Secondary DNS</label><input id='static_ip_dns2' name='static_ip_dns2' type='text' minlength="7" maxlength="15" size="15" pattern="^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$" value='%DNS2%'>
+  <br><br>
+  <label for='appassword'>AP Password</label><input id='appassword' name='appassword' type='password' maxlength='64' minlength='8' value='%APPASSWORD%'/>
+  <br>
+  <label for='showappass'>Show AP Password</label><input type='checkbox' id='showappass' onclick='toggle_appass()'/>
 
   <br><br>
   <label for='reboot'>Reboot on Save</label><input type='checkbox' id='reboot' name='reboot'/>
@@ -652,6 +660,11 @@ const char wifi_html[] PROGMEM = R"rawliteral(
 
   function toggle_pass() {
     var x = document.getElementById('password');
+    x.type==='password'?x.type='text':x.type='password';
+  }
+
+  function toggle_appass() {
+    var x = document.getElementById('appassword');
     x.type==='password'?x.type='text':x.type='password';
   }
 
@@ -771,7 +784,7 @@ Build date: %aboutdate%
 
   <p class='red' id="status"></p>
   <input type="file" name="file1" id="file1" accept=".bin"><br><br>
-  <button onclick="uploadFile()">Upgrade</button><br><br>
+  <button onclick="uploadFile()" %ota_disabled%>Upgrade</button><br><br>
   <progress id="progressBar" value="0" max="100" style="width:300px;"></progress>
   <p id="loaded_n_total"></p>
 

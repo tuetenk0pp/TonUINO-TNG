@@ -42,7 +42,6 @@ ISR(TIMER1_COMPA_vect){
 void Tonuino::setup() {
 #ifdef USE_LED_BUTTONS
   ledManager.begin();
-  ledManager.setState(ledState::startup);
 #endif
 
 #ifdef USE_TIMER
@@ -59,30 +58,30 @@ void Tonuino::setup() {
 #endif
 
   pinMode(shutdownPin  , OUTPUT);
-  digitalWrite(shutdownPin, getLevel(shutdownPinType, level::inactive));
+  pin_set_inactive(shutdownPin, shutdownPinType);
 
   randomSeed(generateRamdomSeed());
 
   // speaker switch off
 #if defined SPKONOFF
   pinMode(ampEnablePin, OUTPUT);
-  digitalWrite(ampEnablePin, getLevel(ampEnablePinType, level::inactive));
+  pin_set_inactive(ampEnablePin, ampEnablePinType);
 #endif
 
 #if defined ALLinONE || defined ALLinONE_Plus
   pinMode(usbAccessPin, OUTPUT);
-  digitalWrite(usbAccessPin, getLevel(usbAccessPinType, level::inactive));
+  pin_set_inactive(usbAccessPin, usbAccessPinType);
 #endif
 
 #ifdef SPECIAL_START_SHORTCUT
-  pinMode(specialStartShortcutPin, INPUT);
+  input_pin_mode(specialStartShortcutPin, specialStartShortcutPinType);
 #endif
 
 #ifdef BT_MODULE
   pinMode(btModuleOnPin          , OUTPUT);
   pinMode(btModulePairingPin     , OUTPUT);
-  digitalWrite(btModuleOnPin     , getLevel(btModuleOnPinType     , level::inactive));
-  digitalWrite(btModulePairingPin, getLevel(btModulePairingPinType, level::inactive));
+  pin_set_inactive(btModuleOnPin     , btModuleOnPinType     );
+  pin_set_inactive(btModulePairingPin, btModulePairingPinType);
 #endif // BT_MODULE
 
 #ifdef ROTARY_ENCODER
@@ -94,8 +93,11 @@ void Tonuino::setup() {
   ring.call_on_startup();
 #endif
 
-  // load Settings from EEPROM
   settings.init();
+  // RESET flash if all buttons pressed
+  if (buttons.isReset())
+    settings.clearEEPROM();
+  // load Settings from EEPROM
   settings.loadSettingsFromFlash();
 #ifdef STORE_LAST_CARD
   settings.readExtShortCutFromFlash(lastSortCut, myFolder);
@@ -111,12 +113,6 @@ void Tonuino::setup() {
   // init NFC reader
   chip_card.initCard();
 
-  // RESET flash if all buttons pressed
-  if (buttons.isReset()) {
-    settings.clearEEPROM();
-    settings.loadSettingsFromFlash();
-  }
-
   // init DFPlayer Mini
   mp3.init();
 
@@ -128,16 +124,17 @@ void Tonuino::setup() {
 
   // speaker switch on
 #if defined SPKONOFF
-  digitalWrite(ampEnablePin, getLevel(ampEnablePinType, level::active));
+  pin_set_active(ampEnablePin, ampEnablePinType);
 #endif
 
   // Start Shortcut "at Startup" - e.g. Welcome Sound
 #ifdef SPECIAL_START_SHORTCUT
 
 #ifdef TonUINO_Classic
-  if (getLevel(specialStartShortcutPinType, (analogRead(specialStartShortcutPin)<512)?0:1) == level::active) {
+  // You cannot digitalRead the A6 on Arduino Nano
+  if ((analogRead(specialStartShortcutPin)<512)?0:1 == level2int(specialStartShortcutPinType, level::  active)) {
 #else // TonUINO_Classic
-  if (getLevel(specialStartShortcutPinType, digitalRead(specialStartShortcutPin)) == level::active) {
+  if (digitalRead(specialStartShortcutPin) == level2int(specialStartShortcutPinType, level::  active)) {
 #endif // TonUINO_Classic
 
 #ifdef HPJACKDETECT
@@ -269,6 +266,9 @@ void Tonuino::loop() {
 #ifdef MEMORY_GAME
         || SM_tonuino::is_in_state<StartPlay<Memory>>()
 #endif
+#ifdef TEAPOT_GAME
+        || SM_tonuino::is_in_state<StartPlay<Teapot>>()
+#endif
   )
     ledManager.setState(ledState::startup);
   else if (SM_tonuino::is_in_state<Play>())
@@ -283,6 +283,10 @@ void Tonuino::loop() {
   else if (SM_tonuino::is_in_state<Memory>())
     ledManager.setState(ledState::playing); // TODO should be changed to another state
 #endif // MEMORY_GAME
+#ifdef TEAPOT_GAME
+  else if (SM_tonuino::is_in_state<Teapot>())
+    ledManager.setState(ledState::playing); // TODO should be changed to another state
+#endif // TEAPOT_GAME
   else // admin menu
     ledManager.setState(ledState::await_input);
 
@@ -291,7 +295,7 @@ void Tonuino::loop() {
 
 #ifdef BT_MODULE
   if (btModulePairingTimer.isActive() && btModulePairingTimer.isExpired())
-    digitalWrite(btModulePairingPin, getLevel(btModulePairingPinType, level::inactive));
+    pin_set_inactive(btModulePairingPin, btModulePairingPinType);
 #endif // BT_MODULE
 
 #ifdef TonUINO_Esp32
@@ -313,45 +317,48 @@ void Tonuino::playFolder() {
   if (numTracksInFolder == 0)
     return;
 
+  uint8_t first_track = 1;
+  uint8_t last_track  = numTracksInFolder;
+
   switch (myFolder.mode) {
 
-  case pmode_t::hoerspiel:
-    // Hörspielmodus: eine zufällige Datei aus dem Ordner
-    myFolder.special = 1;
-    myFolder.special2 = numTracksInFolder;
-    __attribute__ ((fallthrough));
-    /* no break */
   case pmode_t::hoerspiel_vb:
     // Spezialmodus Von-Bin: Hörspiel: eine zufällige Datei aus dem Ordner
-    LOG(play_log, s_debug, F("Hörspiel"));
-    LOG(play_log, s_debug, myFolder.special, str_bis(), myFolder.special2);
-    mp3.enqueueTrack(myFolder.folder, random(myFolder.special, myFolder.special2 + 1));
-    break;
-
-  case pmode_t::album:
-    // Album Modus: kompletten Ordner spielen
-    myFolder.special = 1;
-    myFolder.special2 = numTracksInFolder;
+    first_track = myFolder.special;
+    last_track  = myFolder.special2;
     __attribute__ ((fallthrough));
     /* no break */
+  case pmode_t::hoerspiel:
+    // Hörspielmodus: eine zufällige Datei aus dem Ordner
+    LOG(play_log, s_debug, F("Hörspiel"));
+    LOG(play_log, s_debug, first_track, str_bis(), last_track);
+    mp3.enqueueTrack(myFolder.folder, random(first_track, last_track + 1));
+    break;
+
   case pmode_t::album_vb:
     // Spezialmodus Von-Bis: Album: alle Dateien zwischen Start und Ende spielen
-    LOG(play_log, s_debug, F("Album"));
-    LOG(play_log, s_debug, myFolder.special, str_bis() , myFolder.special2);
-    mp3.enqueueTrack(myFolder.folder, myFolder.special, myFolder.special2);
-    break;
-
-  case pmode_t::party:
-    // Party Modus: Ordner in zufälliger Reihenfolge
-    myFolder.special = 1;
-    myFolder.special2 = numTracksInFolder;
+    first_track = myFolder.special;
+    last_track  = myFolder.special2;
     __attribute__ ((fallthrough));
     /* no break */
+  case pmode_t::album:
+    // Album Modus: kompletten Ordner spielen
+    LOG(play_log, s_debug, F("Album"));
+    LOG(play_log, s_debug, first_track, str_bis() , last_track);
+    mp3.enqueueTrack(myFolder.folder, first_track, last_track);
+    break;
+
   case pmode_t::party_vb:
     // Spezialmodus Von-Bis: Party Ordner in zufälliger Reihenfolge
+    first_track = myFolder.special;
+    last_track  = myFolder.special2;
+    __attribute__ ((fallthrough));
+    /* no break */
+  case pmode_t::party:
+    // Party Modus: Ordner in zufälliger Reihenfolge
     LOG(play_log, s_debug, F("Party"));
-    LOG(play_log, s_debug, myFolder.special, str_bis(), myFolder.special2);
-    mp3.enqueueTrack(myFolder.folder, myFolder.special, myFolder.special2);
+    LOG(play_log, s_debug, first_track, str_bis(), last_track);
+    mp3.enqueueTrack(myFolder.folder, first_track, last_track);
     mp3.shuffleQueue();
     mp3.setEndless();
     break;
@@ -362,24 +369,26 @@ void Tonuino::playFolder() {
     mp3.enqueueTrack(myFolder.folder, myFolder.special);
     break;
 
+  case pmode_t::hoerbuch_vb:
+    first_track = myFolder.special;
+    last_track  = myFolder.special2;
+    __attribute__ ((fallthrough));
+    /* no break */
   case pmode_t::hoerbuch:
   case pmode_t::hoerbuch_1:
+  // Hörbuch Modus: kompletten Ordner spielen und Fortschritt merken (oder von-bis oder nur eine Datei)
   {
-    // Hörbuch Modus: kompletten Ordner spielen und Fortschritt merken (oder nur eine Datei)
     LOG(play_log, s_debug, F("Hörbuch"));
+    LOG(play_log, s_debug, first_track, str_bis(), last_track);
     uint16_t startTrack = settings.readFolderSettingFromFlash(myFolder.folder);
-    if ((startTrack == 0) || (startTrack > numTracksInFolder))
-      startTrack = 1;
-    mp3.enqueueTrack(myFolder.folder, 1, numTracksInFolder, startTrack-1);
+    if ((startTrack < first_track) || (startTrack > last_track))
+      startTrack = first_track;
+    mp3.enqueueTrack(myFolder.folder, first_track, last_track, startTrack-first_track);
   }
     break;
 
-  case pmode_t::quiz_game:
-  case pmode_t::memory_game:
-    // Nothing to enqueue here
-    break;
-
   default:
+    // Nothing to enqueue here
     break;
   }
 }
@@ -394,7 +403,7 @@ void Tonuino::playTrackNumber () {
 // Leider kann das Modul selbst keine Queue abspielen, daher müssen wir selbst die Queue verwalten
 void Tonuino::nextTrack(uint8_t tracks, bool fromOnPlayFinished) {
   LOG(play_log, s_debug, F("nextTrack"));
-  if (fromOnPlayFinished && mp3.isPlayingFolder() && (myFolder.mode == pmode_t::hoerbuch || myFolder.mode == pmode_t::hoerbuch_1)) {
+  if (fromOnPlayFinished && mp3.isPlayingFolder() && (myFolder.mode == pmode_t::hoerbuch || myFolder.mode == pmode_t::hoerbuch_1 || myFolder.mode == pmode_t::hoerbuch_vb)) {
     const uint8_t trackToSave = (mp3.getCurrentTrack() < numTracksInFolder) ? mp3.getCurrentTrack()+1 : 1;
     settings.writeFolderSettingToFlash(myFolder.folder, trackToSave);
     if (myFolder.mode == pmode_t::hoerbuch_1) {
@@ -407,7 +416,7 @@ void Tonuino::nextTrack(uint8_t tracks, bool fromOnPlayFinished) {
   if (mp3.isPlayingFolder() && activeModifier->handleNext())
     return;
   mp3.playNext(tracks, fromOnPlayFinished);
-  if (not fromOnPlayFinished && mp3.isPlayingFolder() && (myFolder.mode == pmode_t::hoerbuch || myFolder.mode == pmode_t::hoerbuch_1)) {
+  if (not fromOnPlayFinished && mp3.isPlayingFolder() && (myFolder.mode == pmode_t::hoerbuch || myFolder.mode == pmode_t::hoerbuch_1 || myFolder.mode == pmode_t::hoerbuch_vb)) {
     settings.writeFolderSettingToFlash(myFolder.folder, mp3.getCurrentTrack());
   }
 }
@@ -466,13 +475,17 @@ void Tonuino::shutdown() {
   ring.call_on_sleep();
 #endif
 
+#ifdef USE_LED_BUTTONS
+  ledManager.setState(ledState::shutdown);
+#endif
+
 #if defined SPKONOFF
-  digitalWrite(ampEnablePin, getLevel(ampEnablePinType, level::inactive));
+  pin_set_inactive(ampEnablePin, ampEnablePinType);
   delay(1000);
 #endif
 
   // enter sleep state
-  digitalWrite(shutdownPin, getLevel(shutdownPinType, level::active));
+  pin_set_active(shutdownPin, shutdownPinType);
   delay(500);
 
 #if defined(USE_POLOLU_SHUTDOWN) or defined(USE_TRAEGER_PLATINE_SHUTDOWN)
@@ -505,14 +518,14 @@ void Tonuino::switchBtModuleOnOff() {
     mp3.playAdvertisement(advertTracks::t_320_bt_on , false/*olnyIfIsPlaying*/);
   else
     mp3.playAdvertisement(advertTracks::t_321_bt_off, false/*olnyIfIsPlaying*/);
-  digitalWrite(btModuleOnPin, getLevel(btModuleOnPinType, btModuleOn ? level::active : level::inactive));
+  pin_set_level(btModuleOnPin, btModuleOnPinType, btModuleOn ? level::active : level::inactive);
 }
 
 void Tonuino::btModulePairing() {
   if (not btModulePairingTimer.isActive()) {
     mp3.playAdvertisement(advertTracks::t_322_bt_pairing, false/*olnyIfIsPlaying*/);
     btModulePairingTimer.start(btModulePairingPulse);
-    digitalWrite(btModulePairingPin, getLevel(btModulePairingPinType, level::active));
+    pin_set_active(btModulePairingPin, btModulePairingPinType);
   }
 }
 #endif // BT_MODULE

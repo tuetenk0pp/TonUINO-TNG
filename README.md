@@ -100,7 +100,7 @@ Eine Anleitung dafür findet man [hier](https://discourse.voss.earth/t/tonuino-s
 
 # Installation
 
-Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.3.1 geändert. Hier kann man die Dateien downloaden: [tonuino.github.io/TonUINO-TNG/sd-card.zip](https://tonuino.github.io/TonUINO-TNG/sd-card.zip)
+Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.3.2 geändert. Hier kann man die Dateien downloaden: [tonuino.github.io/TonUINO-TNG/sd-card.zip](https://tonuino.github.io/TonUINO-TNG/sd-card.zip)
 
 # Hinweise zur WLAN Konfigurattion des ESP32
 
@@ -112,7 +112,20 @@ Wenn man zusätzlich noch mit dem Internet verbunden ist, muss man die IP Adress
 
 ### Version 3.1.5 (21.11.2023)
 
-## Version 3.3.2 (22.11.2025)
+## Version 3.3.3 (25.02.2026)
+- [Issue 301](https://github.com/tonuino/TonUINO-TNG/issues/301): Support ESP32 Wroom 32
+- [Issue 317](https://github.com/tonuino/TonUINO-TNG/issues/317): New play mode: hoerbuch von bis
+- [Issue 312](https://github.com/tonuino/TonUINO-TNG/issues/312): Add password protection to wifi AP
+- [Issue 313](https://github.com/tonuino/TonUINO-TNG/issues/313): Fix some bugs in the LED Manager
+- [Issue 309](https://github.com/tonuino/TonUINO-TNG/issues/309): Improve GPIO handling
+- [Issue 303](https://github.com/tonuino/TonUINO-TNG/issues/303): New game: Teekesselchen
+- [Issue 302](https://github.com/tonuino/TonUINO-TNG/issues/302): Memory game: ignore second card if it is the same
+- [Issue 300](https://github.com/tonuino/TonUINO-TNG/issues/300): Error message when no PCB define was specified
+
+## Version 3.3.2 (19.12.2025)
+- [Issue 297](https://github.com/tonuino/TonUINO-TNG/issues/297): Update french translation and add audio files
+- [Issue 294](https://github.com/tonuino/TonUINO-TNG/issues/294): Esp32 webinterface: missing mutex on mp3 track queue
+- [Issue 292](https://github.com/tonuino/TonUINO-TNG/issues/292): Some improvements for settings and shutdown pin
 - [Issue 290](https://github.com/tonuino/TonUINO-TNG/issues/290): Compiler error if HPJACKDETECT is enabled but not SPKONOFF
 - [Issue 288](https://github.com/tonuino/TonUINO-TNG/issues/288): Mod card "Disable standby timer": disable also timeouts for quiz and memory game
 

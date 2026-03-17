@@ -28,7 +28,7 @@ void setup()
 {
   Serial.begin(115200);
 #ifdef TonUINO_Esp32
-  if (digitalRead(buttonDownPin) == getLevel(buttonPinType, level::active))
+  if (pin_is_active(buttonDownPin, buttonPinType))
     delay(5000);
 #endif
 
@@ -62,6 +62,9 @@ void setup()
 #endif
 #if TonUINO_Esp32 == 100
   LOG(init_log, s_error, F("ESP32 Nano "), lf_no);
+#endif
+#if TonUINO_Esp32 == 200
+  LOG(init_log, s_error, F("ESP32 Wroom 32 "), lf_no);
 #endif
 
 #ifdef FIVEBUTTONS

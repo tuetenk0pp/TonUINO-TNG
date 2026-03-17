@@ -25,6 +25,8 @@ enum class pmode_t: uint8_t {
   quiz_game     =  12,
   memory_game   =  13,
   switch_bt     =  14,
+  teapot_game   =  15,
+  hoerbuch_vb   =  16,
 
   // modifier modes
   sleep_timer   =   1,
@@ -47,12 +49,7 @@ struct folderSettings {
   uint8_t special;
   uint8_t special2;
   bool operator==(const folderSettings& rhs) const {
-    if (folder != rhs.folder || mode != rhs.mode)
-      return false;
-    if (mode == pmode_t::einzel && special != rhs.special)
-      return false;
-    if ((mode == pmode_t::hoerspiel_vb || mode == pmode_t::album_vb || mode == pmode_t::party_vb) &&
-        (special != rhs.special || special2 != rhs.special2))
+    if (folder != rhs.folder || mode != rhs.mode || special != rhs.special || special2 != rhs.special2)
       return false;
     return true;
   }

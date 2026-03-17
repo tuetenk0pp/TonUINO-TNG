@@ -6,6 +6,11 @@
 #include <DFMiniMp3.h>
 
 #include "constants.hpp"
+
+#ifdef TonUINO_Esp32
+#include <mutex>
+#endif
+
 #include "settings.hpp"
 #include "queue.hpp"
 #include "timer.hpp"
@@ -58,6 +63,8 @@ enum class mp3Tracks: uint16_t {
   t_322_mode_quiz_game         = 322,
   t_323_mode_memory_game       = 323,
   t_324_mode_switch_bt         = 324,
+  t_325_mode_teapot_game       = 325,
+  t_326_special_audio_book     = 326,
   t_327_select_file            = 327,
   t_328_select_first_file      = 328,
   t_329_select_last_file       = 329,
@@ -90,6 +97,9 @@ enum class mp3Tracks: uint16_t {
   t_522_memory_game_bad        = 522,
   t_523_memory_game_1          = 523,
   t_524_memory_game_2          = 524,
+  t_530_teapot_game_intro      = 530,
+  t_531_teapot_game_continue   = 531,
+  t_532_teapot_game_solution   = 532,
   t_800_waiting_for_card       = 800,
   t_801_remove_card            = 801,
   t_802_reset_aborted          = 802,
@@ -262,7 +272,7 @@ public:
 
 #ifdef HPJACKDETECT
   void hpjackdetect         ();
-  bool isHeadphoneJackDetect() { return noHeadphoneJackDetect == level::inactive; }
+  bool isHeadphoneJackDetect() { return headphoneJackDetect; }
   void setTempSpkOn         () { tempSpkOn = 2; }
 #endif
 
@@ -300,6 +310,10 @@ private:
   uint8_t              current_folder{};
   uint16_t             current_track{};
   bool                 endless{false};
+#ifdef TonUINO_Esp32
+  std::mutex           q_mtx{};
+#endif
+
 
   // mp3 queue
   uint16_t             mp3_track{};
@@ -321,7 +335,7 @@ private:
 #endif
 
 #ifdef HPJACKDETECT
-  level                noHeadphoneJackDetect{level::unknown};
+  bool                 headphoneJackDetect{};
   uint8_t              tempSpkOn{};
 #endif
 

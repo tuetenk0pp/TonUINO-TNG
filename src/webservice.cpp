@@ -5,6 +5,7 @@
 
 #include <ArduinoJson.h>
 #include <Update.h>
+#include <esp_ota_ops.h>
 
 #include "logger.hpp"
 #include "state_machine.hpp"
@@ -57,6 +58,7 @@ void WifiSettings::init() {
   static_ip_subnet  = prefs.getString("WiFi_st_ip_subn", "0.0.0.0");
   static_ip_dns1    = prefs.getString("WiFi_st_ip_dns1", "0.0.0.0");
   static_ip_dns2    = prefs.getString("WiFi_st_ip_dns2", "0.0.0.0");
+  appassword        = prefs.getString("AP_password");
   LOG(webserv_log, s_info, "wifi settings - ssid: ", ssid,
                            ", hostname: "     , hostname,
                            ", st_ip: "        , static_ip,
@@ -76,7 +78,8 @@ void WifiSettings::set(const String& n_ssid,
                        const String& n_static_ip_gw,
                        const String& n_static_ip_subnet,
                        const String& n_static_ip_dns1,
-                       const String& n_static_ip_dns2   ) {
+                       const String& n_static_ip_dns2,
+                       const String& n_appassword   ) {
   ssid              = n_ssid             ;
   password          = n_password         ;
   hostname          = n_hostname         ;
@@ -86,6 +89,7 @@ void WifiSettings::set(const String& n_ssid,
   static_ip_subnet  = n_static_ip_subnet ;
   static_ip_dns1    = n_static_ip_dns1   ;
   static_ip_dns2    = n_static_ip_dns2   ;
+  appassword        = n_appassword         ;
   prefs.putString("WiFi_ssid"      , ssid             );
   prefs.putString("WiFi_password"  , password         );
   prefs.putString("WiFi_hostname"  , hostname         );
@@ -95,6 +99,7 @@ void WifiSettings::set(const String& n_ssid,
   prefs.putString("WiFi_st_ip_subn", static_ip_subnet );
   prefs.putString("WiFi_st_ip_dns1", static_ip_dns1   );
   prefs.putString("WiFi_st_ip_dns2", static_ip_dns2   );
+  prefs.putString("AP_password"    , appassword       );
   LOG(webserv_log, s_info, "wifi settings saved - ssid: ", ssid,
                            ", hostname: "     , hostname,
                            ", st_ip: "        , static_ip,
@@ -110,7 +115,9 @@ void Webservice::init() {
 
   wifi_settings.init();
 
-  if ((digitalRead(buttonUpPin) != getLevel(buttonPinType, level::active)) && (wifi_settings.get_ssid() != "")) {
+  const bool force_ap = pin_is_active(buttonUpPin, buttonPinType);
+
+  if (not force_ap && (wifi_settings.get_ssid() != "")) {
     WiFi.setHostname(wifi_settings.get_hostname().c_str());
     WiFi.mode(WIFI_MODE_STA);
 
@@ -142,7 +149,12 @@ void Webservice::init() {
     LOG(webserv_log, s_info, "Not connected to WiFi ", wifi_settings.get_ssid(), ", starting AP TonUINO");
     WiFi.softAPsetHostname("tonuino");
     WiFi.mode(WIFI_MODE_AP);
-    WiFi.softAP("TonUINO");
+    if ((wifi_settings.get_appassword().length() < 8) || force_ap) {
+      WiFi.softAP("TonUINO");
+    }
+    else {
+      WiFi.softAP("TonUINO", wifi_settings.get_appassword());
+    }
     delay(500); // slight delay to make sure we get an AP IP
     LOG(webserv_log, s_info, "AP IP address: ",WiFi.softAPIP());
     dns_server.start(53, "*", WiFi.softAPIP());
@@ -288,6 +300,8 @@ void Webservice::update_settings(AsyncWebServerRequest *request) {
 #ifdef BT_MODULE
                                                                                request->arg("sc_mode1"            ) == "Bluetooth ein/aus"? pmode_t::switch_bt    :
 #endif
+                                                                               request->arg("sc_mode1"            ) == "Teekesselchen Spiel"? pmode_t::teapot_game:
+                                                                               request->arg("sc_mode1"            ) == "Hörbuch von bis"  ? pmode_t::hoerbuch_vb  :
                                                                                                                                             pmode_t::none         ;
   if (request->hasArg("sc_folder1"          )) settings.shortCuts[0].folder  = request->arg("sc_folder1"          ).toInt();
   if (request->hasArg("sc_special11"        )) settings.shortCuts[0].special = request->arg("sc_special11"        ).toInt();
@@ -309,6 +323,8 @@ void Webservice::update_settings(AsyncWebServerRequest *request) {
 #ifdef BT_MODULE
                                                                                request->arg("sc_mode2"            ) == "Bluetooth ein/aus"? pmode_t::switch_bt    :
 #endif
+                                                                               request->arg("sc_mode2"            ) == "Teekesselchen Spiel"? pmode_t::teapot_game:
+                                                                               request->arg("sc_mode2"            ) == "Hörbuch von bis"  ? pmode_t::hoerbuch_vb  :
                                                                                                                                             pmode_t::none         ;
   if (request->hasArg("sc_folder2"          )) settings.shortCuts[1].folder  = request->arg("sc_folder2"          ).toInt();
   if (request->hasArg("sc_special12"        )) settings.shortCuts[1].special = request->arg("sc_special12"        ).toInt();
@@ -330,6 +346,7 @@ void Webservice::update_settings(AsyncWebServerRequest *request) {
 #ifdef BT_MODULE
                                                                                request->arg("sc_mode3"            ) == "Bluetooth ein/aus"? pmode_t::switch_bt    :
 #endif
+                                                                               request->arg("sc_mode3"            ) == "Teekesselchen Spiel"? pmode_t::teapot_game:
                                                                                                                                             pmode_t::none         ;
   if (request->hasArg("sc_folder3"          )) settings.shortCuts[2].folder  = request->arg("sc_folder3"          ).toInt();
   if (request->hasArg("sc_special13"        )) settings.shortCuts[2].special = request->arg("sc_special13"        ).toInt();
@@ -351,6 +368,8 @@ void Webservice::update_settings(AsyncWebServerRequest *request) {
 #ifdef BT_MODULE
                                                                                request->arg("sc_mode4"            ) == "Bluetooth ein/aus"? pmode_t::switch_bt    :
 #endif
+                                                                               request->arg("sc_mode4"            ) == "Teekesselchen Spiel"? pmode_t::teapot_game:
+                                                                               request->arg("sc_mode4"            ) == "Hörbuch von bis"  ? pmode_t::hoerbuch_vb  :
                                                                                                                                             pmode_t::none         ;
   if (request->hasArg("sc_folder4"          )) settings.shortCuts[3].folder  = request->arg("sc_folder4"          ).toInt();
   if (request->hasArg("sc_special14"        )) settings.shortCuts[3].special = request->arg("sc_special14"        ).toInt();
@@ -442,6 +461,8 @@ void Webservice::get_settings(AsyncWebServerRequest *request) {
 #ifdef BT_MODULE
                                   settings.shortCuts[i-1].mode == pmode_t::switch_bt    ? "Bluetooth ein/aus":
 #endif
+                                  settings.shortCuts[i-1].mode == pmode_t::teapot_game  ? "Teekesselchen Spiel":
+                                  settings.shortCuts[i-1].mode == pmode_t::hoerbuch_vb  ? "Hörbuch von bis"  :
                                                                                           "--------"         ;
 
     doc["sc_folder"+String(i)  ] = String(settings.shortCuts[i-1].folder  );
@@ -566,6 +587,8 @@ void Webservice::card(AsyncWebServerRequest *request) {
 #ifdef BT_MODULE
                   request->arg("mode") == "Bluetooth ein/aus"? pmode_t::switch_bt    :
 #endif
+                  request->arg("mode") == "Teekesselchen Spiel"? pmode_t::teapot_game:
+                  request->arg("mode") == "Hörbuch von bis"  ? pmode_t::hoerbuch_vb  :
                                                                pmode_t::none         ;
 #ifdef BT_MODULE
   if (card.mode == pmode_t::switch_bt) card.folder = 0xff;
@@ -576,12 +599,11 @@ void Webservice::card(AsyncWebServerRequest *request) {
     return;
   }
 
-  if (card.mode == pmode_t::repeat_last || card.mode == pmode_t::switch_bt) {
-    card.folder   = 0xff; // dummy value > 0 to make readCard() returning true
-    card.special  = 0;
-    card.special2 = 0;
-  }
-  else if (tonuino.getActiveModifier().getActive() != pmode_t::jukebox){
+  uint16_t track_count = 255;
+
+  if ((tonuino.getActiveModifier().getActive() != pmode_t::jukebox) &&
+      (card.mode != pmode_t::repeat_last) &&
+      (card.mode != pmode_t::switch_bt)){
 
     if (SM_tonuino::is_in_state<Play>())
       cmd = commandRaw::pause;
@@ -593,41 +615,52 @@ void Webservice::card(AsyncWebServerRequest *request) {
       request->send(400, "text/html", "Der Folder existiert nicht");
       return;
     }
-    String message;
-    switch (card.mode) {
-    case pmode_t::einzel       :
-      if (card.special < 1)
-        message += "\nDer Parameter Special1 muss mindestens 1 sein";
-      if (card.special > track_count)
-        message += String("\nDer Parameter Special1 muss kleiner oder gleich der Anzahl der Tracks im Folder sein (") + String(track_count) + ")";
-      break;
-    case pmode_t::hoerspiel_vb :
-    case pmode_t::album_vb     :
-    case pmode_t::party_vb     :
-      if (card.special < 1)
-        message += "\nDer Parameter Special1 muss mindestens 1 sein";
-      if (card.special > card.special2)
-        message += "\nDer Parameter Special1 muss kleiner oder gleich Special2 sein";
-      if (card.special2 > track_count)
-        message += String("\nDer Parameter Special2 muss kleiner oder gleich der Anzahl der Tracks im Folder sein (") + String(track_count) + ")";
-      break;
-    case pmode_t::hoerbuch_1   :
-      if (card.special >= 30)
-        message += "\nDer Parameter Special1 muss kleiner als 30 sein";
-      break;
-    case pmode_t::quiz_game    :
-      if (card.special != 0 && card.special != 2 && card.special != 4)
-        message += "\nDer Parameter Special1 muss 0, 2 oder 4 sein";
-      if (card.special2 != 0 && card.special2 != 1)
-        message += "\nDer Parameter Special2 muss 0 oder 1 sein";
-      break;
-    default                    :
-      break;
-    }
-    if (message != "") {
-      request->send(400, "text/html", message);
-      return;
-    }
+  }
+  String message;
+  switch (card.mode) {
+  case pmode_t::einzel       :
+    if (card.special < 1)
+      message += "\nDer Parameter Special1 muss mindestens 1 sein";
+    if (card.special > track_count)
+      message += String("\nDer Parameter Special1 muss kleiner oder gleich der Anzahl der Tracks im Folder sein (") + String(track_count) + ")";
+    card.special2 = 0;
+    break;
+  case pmode_t::hoerspiel_vb :
+  case pmode_t::album_vb     :
+  case pmode_t::party_vb     :
+  case pmode_t::hoerbuch_vb  :
+    if (card.special < 1)
+      message += "\nDer Parameter Special1 muss mindestens 1 sein";
+    if (card.special > card.special2)
+      message += "\nDer Parameter Special1 muss kleiner oder gleich Special2 sein";
+    if (card.special2 > track_count)
+      message += String("\nDer Parameter Special2 muss kleiner oder gleich der Anzahl der Tracks im Folder sein (") + String(track_count) + ")";
+    break;
+  case pmode_t::hoerbuch_1   :
+    if (card.special >= 30)
+      message += "\nDer Parameter Special1 muss kleiner als 30 sein";
+    card.special2 = 0;
+    break;
+  case pmode_t::quiz_game    :
+    if (card.special != 0 && card.special != 2 && card.special != 4)
+      message += "\nDer Parameter Special1 muss 0, 2 oder 4 sein";
+    if (card.special2 != 0 && card.special2 != 1)
+      message += "\nDer Parameter Special2 muss 0 oder 1 sein";
+    break;
+  case pmode_t::repeat_last  :
+  case pmode_t::switch_bt    :
+    card.folder   = 0xff; // dummy value > 0 to make readCard() returning true
+    card.special  = 0;
+    card.special2 = 0;
+    break;
+  default                    :
+    card.special  = 0;
+    card.special2 = 0;
+    break;
+  }
+  if (message != "") {
+    request->send(400, "text/html", message);
+    return;
   }
 
   if (request->arg("card_action") == "start") {
@@ -695,7 +728,9 @@ String Webservice::get_status() {
                   (tonuino.getMyFolder().mode == pmode_t::hoerbuch_1  ) ? String("Hörbuch einzel"  ) :
                   (tonuino.getMyFolder().mode == pmode_t::repeat_last ) ? String("Wiederhole"      ) :
                   (tonuino.getMyFolder().mode == pmode_t::quiz_game   ) ? String("Quiz Spiel"      ) :
-                  (tonuino.getMyFolder().mode == pmode_t::memory_game ) ? String("Memory Spiel"    ) :String("?");
+                  (tonuino.getMyFolder().mode == pmode_t::memory_game ) ? String("Memory Spiel"    ) :
+                  (tonuino.getMyFolder().mode == pmode_t::teapot_game ) ? String("Teekesselchen Spiel") :
+                  (tonuino.getMyFolder().mode == pmode_t::hoerbuch_vb ) ? String("Hörbuch von bis" ) : String("?");
     status += String(" (Mode: ") + mode + String(", Folder: ") + String(mp3.getCurrentFolder()) + String(")");
   }
 
@@ -821,7 +856,8 @@ void Webservice::wifi_save(AsyncWebServerRequest *request) {
       request->hasArg("static_ip_gw"    ) &&
       request->hasArg("static_ip_subnet") &&
       request->hasArg("static_ip_dns1"  ) &&
-      request->hasArg("static_ip_dns2"  )
+      request->hasArg("static_ip_dns2"  ) &&
+      request->hasArg("appassword"      )
       ) {
     wifi_settings.set(request->arg("ssid"            ),
                       request->arg("password"        ),
@@ -831,7 +867,8 @@ void Webservice::wifi_save(AsyncWebServerRequest *request) {
                       request->arg("static_ip_gw"    ),
                       request->arg("static_ip_subnet"),
                       request->arg("static_ip_dns1"  ),
-                      request->arg("static_ip_dns2"  )
+                      request->arg("static_ip_dns2"  ),
+                      request->arg("appassword"      )
                       );
     LOG(webserv_log, s_info, "wifi settings saved");
   }
@@ -870,7 +907,7 @@ void Webservice::onOtaUpload(AsyncWebServerRequest *request, String filename, si
       StreamString str;
       Update.printError(str);
       LOG(webserv_log, s_error, "Failed to start update process: ", str.c_str());
-      request->send(400, "text/plain", "Failed to start update process");
+      request->send(400, "text/plain", String("Failed to start update process: ")+str.c_str());
       return;
     }
   }
@@ -936,6 +973,8 @@ String Webservice::process_page(const String& var) {
     return wifi_settings.get_static_ip_dns1();
   else if (var == "DNS2")
     return wifi_settings.get_static_ip_dns2();
+  else if (var == "APPASSWORD")
+    return wifi_settings.get_appassword();
 
   return getInfoData(var);
 
@@ -1040,6 +1079,9 @@ String Webservice::getInfoData(const String& id){
     #if  TonUINO_Esp32 == 100
       p = "ESP32 Nano, ";
     #endif
+    #if  TonUINO_Esp32 == 200
+      p = "ESP32 Wroom, ";
+    #endif
     #ifdef THREEBUTTONS
       p += "3 Tasten";
     #endif
@@ -1123,6 +1165,9 @@ String Webservice::getInfoData(const String& id){
     #ifdef MEMORY_GAME
       p += "<br>Memory Game";
     #endif
+    #ifdef TEAPOT_GAME
+      p += "<br>Teapot Game";
+    #endif
 
     #ifdef STORE_LAST_CARD
       p += "<br>Speichere letzte Karte";
@@ -1166,6 +1211,12 @@ String Webservice::getInfoData(const String& id){
     #ifdef MODIFICATION_CARD_PAUSE_AFTER_TRACK
       p += "<br>Pause nach jedem Track";
     #endif
+
+      p += "<br>OTA possible: ";
+      if (esp_ota_get_app_partition_count() > 1)
+        p += "yes";
+      else
+        p += "no";
   }
   else if(id==F("aboutarduinover")){
     p = String(W_STRING(ESP_ARDUINO_VERSION_MAJOR)  "."  W_STRING(ESP_ARDUINO_VERSION_MINOR)  "."  W_STRING(ESP_ARDUINO_VERSION_PATCH));
@@ -1175,6 +1226,10 @@ String Webservice::getInfoData(const String& id){
   }
   else if(id==F("aboutdate")){
     p = String(__DATE__ " " __TIME__);
+  }
+  else if(id==F("ota_disabled")){
+    if (esp_ota_get_app_partition_count()<=1)
+      p = "disabled";
   }
   return p;
 }
