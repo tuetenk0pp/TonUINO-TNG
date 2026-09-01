@@ -421,7 +421,7 @@ inline constexpr uint8_t jukebox_max_cards  = 10;
  * Verwende einen Widerstand (z.B. 1KΩ) in Reihe zu jeder LED zur Strombegrenzung.
  */
 
-//#define USE_LED_BUTTONS
+#define USE_LED_BUTTONS
 
 #ifdef USE_LED_BUTTONS
 inline constexpr uint8_t led_play_pin = A5;
