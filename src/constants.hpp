@@ -97,7 +97,7 @@
 //#define TonUINO_Every
 //#define TonUINO_Every_4808
 //#define ALLinONE
-//#define ALLinONE_Plus
+#define ALLinONE_Plus
 //#define TonUINO_Esp32 100 // Esp32 Nano
 //#define TonUINO_Esp32 200 // Esp32 Wroom 32
 
@@ -130,7 +130,7 @@ static_assert(SUM_PCB == 1 , "Please uncomment exactly one of the PCB lines (Ton
  * default: THREEBUTTONS for classic/every
  *          FIVEBUTTONS  for AiO and AiO+
  */
-//#define THREEBUTTONS
+#define THREEBUTTONS
 //#define FIVEBUTTONS
 //#define BUTTONS3X3
 
@@ -185,7 +185,7 @@ static_assert(SUM_PCB == 1 , "Please uncomment exactly one of the PCB lines (Ton
 /* uncomment the below line to enable the rotary encoder for volume setting
  * um den Drehgeber zu unterstützen bitte in der nächste Zeile den Kommentar entfernen
  */
-//#define ROTARY_ENCODER
+#define ROTARY_ENCODER
 /* uncomment the below line to enable the rotary encoder also for next and previous (only one click in one second)
  * um den Drehgeber auch für vor und zurück zu unterstützen bitte in der nächste Zeile den Kommentar entfernen
  */
@@ -315,21 +315,21 @@ inline constexpr levelType      dfPlayer_noHeadphoneJackDetectType = levelType::
  * um die selbe RFID zu ignorieren, wenn die bereits spielt, in der nächste
  * Zeile den Kommentar entfernen
  */
-//#define DONT_ACCEPT_SAME_RFID_TWICE
+#define DONT_ACCEPT_SAME_RFID_TWICE
 
 /* uncomment the below line to resume playback if the RFID that started the
  * playback is detected again
  * um die Wiedergabe fortzusetzen, wenn die selbe RFID erkannt wird, die bereits
  * abgespielt wird, in der nächste Zeile den Kommentar entfernen
  */
-//#define RESUME_ON_SAME_RFID
+#define RESUME_ON_SAME_RFID
 
 /* uncomment the below line to replay the last card or short cut if pressed play/pause
  * in Idle state
  * um die letzte Karte oder den letzten Short Cut wieder abzuspielen, wenn die Play/Pause Taste
  * im Idle State gedrückt wird, in der nächste Zeile den Kommentar entfernen
  */
-//#define REPLAY_ON_PLAY_BUTTON
+#define REPLAY_ON_PLAY_BUTTON
 
 // ######################################################################
 
@@ -398,7 +398,7 @@ inline constexpr unsigned long btModulePairingPulse    = 500;
  * um die Batterie Spannungsmessung zu aktivieren, in der nächste Zeile den Kommentar entfernen
  * (nicht für ALLinONE, nicht empfohlen für TonUINO_Classic)
  */
-//#define BAT_VOLTAGE_MEASUREMENT
+#define BAT_VOLTAGE_MEASUREMENT
 
 #ifdef BAT_VOLTAGE_MEASUREMENT
 #if not defined(ALLinONE_Plus) and not defined(ALLinONE) and not (TonUINO_Esp32 == 200)
@@ -425,11 +425,11 @@ inline constexpr float   voltageMeasurementCorrection  = 0.710; // Spannungsteil
 #endif
 
 // for Li-Ion
-inline constexpr float   batVoltageLow                 = 2.95;
-inline constexpr float   batVoltageEmpty               = 2.90;
+// inline constexpr float   batVoltageLow                 = 2.95;
+// inline constexpr float   batVoltageEmpty               = 2.90;
 // for Li-PO
-//inline constexpr float   batVoltageLow                 = 3.40;
-//inline constexpr float   batVoltageEmpty               = 3.20;
+inline constexpr float   batVoltageLow                 = 3.40;
+inline constexpr float   batVoltageEmpty               = 3.20;
 #endif // BAT_VOLTAGE_MEASUREMENT
 
 // ######################################################################
@@ -502,7 +502,7 @@ inline constexpr uint8_t jukebox_max_cards  = 10;
  * Verwende einen Widerstand (z.B. 1KΩ) in Reihe zu jeder LED zur Strombegrenzung.
  */
 
-//#define USE_LED_BUTTONS
+#define USE_LED_BUTTONS
 
 #ifdef USE_LED_BUTTONS
 inline constexpr uint8_t led_play_pin = A5;
