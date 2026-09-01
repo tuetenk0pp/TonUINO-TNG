@@ -1,12 +1,11 @@
 # TonUINO
-
 Die DIY Musikbox (nicht nur) für Kinder
 
 Dies ist die offizielle Software für die Musikbox, die [hier](https://www.tonuino.de/TNG) beschrieben ist. 
 
 Falls du Interesse daran hast, zur Weiterentwicklung des TonUINO-Projekts beizutragen, bist du herzlich eingeladen, dich zu beteiligen. Für Diskussionen verwende bitte das [Forum](https://discourse.voss.earth). Dort findest du auch weitere Anleitungen und bekommst Hilfe bei Problemen. 
 
-## Anleitung zum Compilieren
+# Anleitung zum Compilieren
 
 ## Arduino IDE
 Allgemeine Anleitungen zum Einrichten der IDE findet man hier [www.tonuino.de/TNG](https://www.tonuino.de/TNG) und hier [www.leiterkartenpiraten.de](https://www.leiterkartenpiraten.de)
@@ -36,8 +35,8 @@ Allgemeine Anleitungen zum Einrichten der IDE findet man hier [www.tonuino.de/TN
 ```
 
 - Man findet den Ordner auch, wenn man die Datei platform.txt sucht.  
+
 - Für die AiOplus HW Variante sind keine Änderungen notwendig  
-- Die HW Variante (TonUINO_Classic, ALLinONE oder ALLinONE_Plus) sowie die Button Konfiguration (THREEBUTTONS, FIVEBUTTONS oder BUTTONS3X3) muss in der Datei constants.hpp durch Entfernen des entsprechenden Kommentars angegeben werden.
 
 - Die HW Variante (TonUINO_*, ALLinONE oder ALLinONE_Plus) sowie die Button Konfiguration (THREEBUTTONS, FIVEBUTTONS oder BUTTONS3X3) muss in der Datei constants.hpp durch Entfernen des entsprechenden Kommentars angegeben werden. (nur wenn die Arduino IDE verwendet wird) 
 
@@ -100,7 +99,7 @@ Eine Anleitung dafür findet man [hier](https://discourse.voss.earth/t/tonuino-s
 
 # Installation
 
-Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.3.1 geändert. Hier kann man die Dateien downloaden: [tonuino.github.io/TonUINO-TNG/sd-card.zip](https://tonuino.github.io/TonUINO-TNG/sd-card.zip)
+Die SD Karte (Ordner mp3 und advert) hat sich gegenüber der Version 3.3.2 geändert. Hier kann man die Dateien downloaden: [tonuino.github.io/TonUINO-TNG/sd-card.zip](https://tonuino.github.io/TonUINO-TNG/sd-card.zip)
 
 # Hinweise zur WLAN Konfigurattion des ESP32
 
@@ -108,11 +107,32 @@ Wenn man ausschließlich mit dem TonUINO AP mit der SSID "TonUINO" verbunden ist
 jeder beliebigen Adresse (mit mindestens einem Punkt), also z.B. "http://tonuino.t". 
 Wenn man zusätzlich noch mit dem Internet verbunden ist, muss man die IP Adresse nehmen: "http://192.168.4.1". 
 
-## Change Log
+# Change Log
 
-### Version 3.1.5 (21.11.2023)
+## Version 3.3.3 (13.08.2026)
+- [Issue 334](https://github.com/tonuino/TonUINO-TNG/issues/334): Change "Arduino" to "Arduino ESP Board Package" in the webinterface
+- [Issue 336](https://github.com/tonuino/TonUINO-TNG/issues/336): DF Player MH2024K16SS: ignore onplayerfinished for adv tracks
+- [Issue 328](https://github.com/tonuino/TonUINO-TNG/issues/328): New modifier card "endless"
+- [Issue 319](https://github.com/tonuino/TonUINO-TNG/issues/319): Hoerbuch mode "random folder"
+- [Issue 330](https://github.com/tonuino/TonUINO-TNG/issues/330): Compiler error when defining "BOUTTONS3X3"
+- [Issue 324](https://github.com/tonuino/TonUINO-TNG/issues/324): Rotary Encoder doesn't work stable for ESP32
+- [Issue 322](https://github.com/tonuino/TonUINO-TNG/issues/322): ESP32: add a possibility to indicate that the power hold pin is ready.
+- [Issue 321](https://github.com/tonuino/TonUINO-TNG/issues/321): LKP Player with HW serial doesn't not work
 
-## Version 3.3.2 (22.11.2025)
+## Version 3.3.3 (25.02.2026)
+- [Issue 301](https://github.com/tonuino/TonUINO-TNG/issues/301): Support ESP32 Wroom 32
+- [Issue 317](https://github.com/tonuino/TonUINO-TNG/issues/317): New play mode: hoerbuch von bis
+- [Issue 312](https://github.com/tonuino/TonUINO-TNG/issues/312): Add password protection to wifi AP
+- [Issue 313](https://github.com/tonuino/TonUINO-TNG/issues/313): Fix some bugs in the LED Manager
+- [Issue 309](https://github.com/tonuino/TonUINO-TNG/issues/309): Improve GPIO handling
+- [Issue 303](https://github.com/tonuino/TonUINO-TNG/issues/303): New game: Teekesselchen
+- [Issue 302](https://github.com/tonuino/TonUINO-TNG/issues/302): Memory game: ignore second card if it is the same
+- [Issue 300](https://github.com/tonuino/TonUINO-TNG/issues/300): Error message when no PCB define was specified
+
+## Version 3.3.2 (19.12.2025)
+- [Issue 297](https://github.com/tonuino/TonUINO-TNG/issues/297): Update french translation and add audio files
+- [Issue 294](https://github.com/tonuino/TonUINO-TNG/issues/294): Esp32 webinterface: missing mutex on mp3 track queue
+- [Issue 292](https://github.com/tonuino/TonUINO-TNG/issues/292): Some improvements for settings and shutdown pin
 - [Issue 290](https://github.com/tonuino/TonUINO-TNG/issues/290): Compiler error if HPJACKDETECT is enabled but not SPKONOFF
 - [Issue 288](https://github.com/tonuino/TonUINO-TNG/issues/288): Mod card "Disable standby timer": disable also timeouts for quiz and memory game
 
@@ -226,8 +246,7 @@ Wenn man zusätzlich noch mit dem Internet verbunden ist, muss man die IP Adress
 - [Issue 141](https://github.com/tonuino/TonUINO-TNG/issues/141): Enhance Features for Neo Pixel Ring
 - [Issue 132](https://github.com/tonuino/TonUINO-TNG/issues/132): Support DF Player MP3-TF-16P V3.0 with the chip MH2024K-24SS
 
-### Version 3.1.4 (20.11.2023)
-
+## Version 3.1.4 (20.11.2023)
 - [Issue 138](https://github.com/tonuino/TonUINO-TNG/issues/138): Two new options for when the same RFID card is inserted
 - [Issue 130](https://github.com/tonuino/TonUINO-TNG/issues/130): Add circuit diagram
 - [Issue 133](https://github.com/tonuino/TonUINO-TNG/issues/133): Cards with version 1 don't work
@@ -246,8 +265,7 @@ Wenn man zusätzlich noch mit dem Internet verbunden ist, muss man die IP Adress
 - [Issue 104](https://github.com/tonuino/TonUINO-TNG/issues/104): Use bad framework-lgt8fx
 - [Issue 099](https://github.com/tonuino/TonUINO-TNG/issues/99): Use new DFPlayer Mini Mp3 v1.2.1 Library
 
-### Version 3.1.3 (03.08.2023)
-
+## Version 3.1.3 (03.08.2023)
 - [Issue 073](https://github.com/tonuino/TonUINO-TNG/issues/73): Support LED or NeoPixel Ring
 - [Issue 095](https://github.com/tonuino/TonUINO-TNG/issues/95): React on 3x3 Button Board also in Play State
 - [Issue 088](https://github.com/tonuino/TonUINO-TNG/issues/88): Flash reset during startup should not open the admin menu
@@ -265,8 +283,7 @@ Wenn man zusätzlich noch mit dem Internet verbunden ist, muss man die IP Adress
 - Viele Fehlerkorrekturen und Verbesserungen
 - [Issue 019](https://github.com/tonuino/TonUINO-TNG/issues/19): Implement support for the 3x3 Button board
 
-### Version 3.1.2 (03.03.2023)
-
+## Version 3.1.2 (03.03.2023)
 - [Issue 062](https://github.com/tonuino/TonUINO-TNG/issues/62): Add offline TTS coqui to text_to_speach
 - [Issue 067](https://github.com/tonuino/TonUINO-TNG/issues/67): Add a hint in the admin menu that the card has to be removed
 - [Issue 065](https://github.com/tonuino/TonUINO-TNG/issues/65): Increase dfPlayer_timeUntilStarts
@@ -277,8 +294,7 @@ Wenn man zusätzlich noch mit dem Internet verbunden ist, muss man die IP Adress
 - [Issue 039](https://github.com/tonuino/TonUINO-TNG/issues/39): No pause if card is removed too early
 - [Issue 028](https://github.com/tonuino/TonUINO-TNG/issues/28): Revise Button behavior
 
-### Version 3.1.1 (15.01.2023)
-
+## Version 3.1.1 (15.01.2023)
 - [Issue 045](https://github.com/tonuino/TonUINO-TNG/issues/45): audio_messages_de.txt isn't up to date.
 - [Issue 044](https://github.com/tonuino/TonUINO-TNG/issues/44): Statemachine remains in StartPlay forever is mp3 files missing
 - [Issue 034](https://github.com/tonuino/TonUINO-TNG/issues/34): Unit Test Framework and example Tests
@@ -292,16 +308,14 @@ Wenn man zusätzlich noch mit dem Internet verbunden ist, muss man die IP Adress
 - [Issue 004](https://github.com/tonuino/TonUINO-TNG/issues/4): Implement reaction to empty card
 - [Issue 005](https://github.com/tonuino/TonUINO-TNG/issues/5): Update to use new mp3 library version 1.1.0
 
-### Version 3.1 (13.10.2022)
-
+## Version 3.1 (13.10.2022)
 - Unterstützung für alle Platinen der Leiterkartenpiraten hinzugefügt (über einfaches #define in der `src/constants.hpp` konfigurierbar)
   - TonUINO Classic
   - All-in-One
   - All-in-One Plus
   - fix for NTAG213
 
-### Version 3.0 (xx.xx.xxxx) - by Boerge1
-
+## Version 3.0 (xx.xx.xxxx) - by Boerge1
 - vollständiges Refactoring mit State-Machine
 - Die Main-Loop läuft jetzt stabil mit 50 ms
 - Neues Feature: neuer Mode: Hörbuch einzeln (nur ein Titel wird gespielt und Fortschritt gespeichert)
@@ -310,8 +324,7 @@ Wenn man zusätzlich noch mit dem Internet verbunden ist, muss man die IP Adress
 - Das Admin-Menü kann an jeder Stelle abgebrochen werden
 - Viele weitere Verbesserungen und Bug-Fixes
 
-### Version 2.1 (xx.xx.xxxx) noch WIP
-
+## Version 2.1 (xx.xx.xxxx) noch WIP
 - Partymodus hat nun eine Queue -> jedes Lied kommt nur genau 1x vorkommt
 - Neue Wiedergabe-Modi "Spezialmodus Von-Bis" - Hörspiel, Album und Party -> erlaubt z.B. verschiedene Alben in einem Ordner zu haben und je mit einer Karte zu verknüpfen
 - Admin-Menü
@@ -324,11 +337,10 @@ Wenn man zusätzlich noch mit dem Internet verbunden ist, muss man die IP Adress
 - Modikationskarten (Sleeptimer, Tastensperre, Stopptanz, KiTa-Modus)
 - Admin-Menü kann abgesichert werden
 
-### Version 2.01 (01.11.2018)
-
+## Version 2.01 (01.11.2018)
 - kleiner Fix um die Probleme beim Anlernen von Karten zu reduzieren
 
-### Version 2.0 (26.08.2018)
+## Version 2.0 (26.08.2018)
 
 - Lautstärke wird nun über einen langen Tastendruck geändert
 - bei kurzem Tastendruck wird der nächste / vorherige Track abgespielt (je nach Wiedergabemodus nicht verfügbar)
